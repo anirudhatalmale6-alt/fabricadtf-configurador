@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Configurador de T-shirts — Fábrica DTF (Demo)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+body{margin:0;background:#f5f7fc}
+/* Mock site chrome to show it embedded in fabricadtf.pt */
+.site-top{background:#0b1a5b;color:#fff;text-align:center;padding:12px;font:600 15px Poppins,sans-serif}
+.site-head{background:#fff;border-bottom:1px solid #e6e9f2;display:flex;align-items:center;justify-content:space-between;padding:14px 32px}
+.site-head .logo{font:800 22px Poppins,sans-serif;color:#0b1a5b}
+.site-head .logo span{color:#8b3df2}
+.site-nav{display:flex;gap:26px;font:600 15px Poppins,sans-serif;color:#1c2440}
+.site-nav a{color:#1c2440;text-decoration:none}
+.site-nav a.act{color:#8b3df2}
+.page-title{max-width:1180px;margin:26px auto 0;padding:0 18px;font:700 30px Poppins,sans-serif;color:#0b1a5b}
+.page-title small{display:block;font:400 15px Poppins,sans-serif;color:#6b7392;margin-top:4px}
+</style>
+<link rel="stylesheet" href="assets/configurator.css">
+</head>
+<body>
+  <div class="site-top">🚚 Entrega grátis no continente em compras acima de 150€</div>
+  <div class="site-head">
+    <div class="logo">FÁBRICA<span>DTF</span></div>
+    <nav class="site-nav"><a>Início</a><a>Sobre Nós</a><a>Produtos</a><a class="act">Configurador</a><a>Contato</a></nav>
+  </div>
+  <div class="page-title">Configura a tua T-shirt<small>Escolhe o modelo, cor e tamanho, envia a tua arte e vê o resultado em tempo real.</small></div>
+
+  <div class="fdtf-config"></div>
+
+<script>
+window.FDTF_CONFIG = {
+  currency: "€",
+  vat: 23,
+  printPrice: 2.50,
+  maxMB: 25,
+  accept: ".png,.jpg,.jpeg,.svg,.pdf",
+  acceptLabel: "PNG, JPG, SVG, PDF · máx 25 MB",
+  products: [
+    { id: "classic", name: "T-shirt Classic 160g", price: 7.00, badge: "Mais escolhida", badgeHot: true },
+    { id: "premium", name: "T-shirt Premium 190g", price: 9.50, badge: "Qualidade superior" },
+    { id: "sport",   name: "T-shirt Sport 135g",   price: 8.00, badge: "Ideal para desporto" }
+  ],
+  colors: [
+    { name: "Branco", hex: "#ffffff" },
+    { name: "Preto", hex: "#1a1a1a" },
+    { name: "Cinza", hex: "#9aa0aa" },
+    { name: "Azul Marinho", hex: "#12235a" },
+    { name: "Azul Royal", hex: "#2f6bff" },
+    { name: "Vermelho", hex: "#d62828" },
+    { name: "Verde", hex: "#1e7d34" },
+    { name: "Amarelo", hex: "#f4c20d" },
+    { name: "Laranja", hex: "#ef7d1a" },
+    { name: "Rosa", hex: "#e85aa0" }
+  ],
+  sizes: ["XS","S","M","L","XL","XXL"]
+};
+</script>
+<script src="assets/configurator.js"></script>
+</body>
+</html>
