@@ -170,8 +170,8 @@
 
     // controls
     var ctrl = el('<div></div>');
-    var drop = el('<div class="fdtf-drop"><div class="ic">🎨</div><b>' + t("drop", "Arrasta a imagem ou clica para carregar") + '</b><small>' + (CFG.acceptLabel || "PNG, JPG, SVG, PDF · máx 25 MB") + '</small></div>');
-    var file = el('<input type="file" accept="' + (CFG.accept || ".png,.jpg,.jpeg,.svg,.pdf") + '" style="display:none">');
+    var drop = el('<div class="fdtf-drop"><div class="ic">🎨</div><b>' + t("drop", "Arrasta a imagem ou clica para carregar") + '</b><small>' + (CFG.acceptLabel || "PNG ou PDF · máx 25 MB") + '</small></div>');
+    var file = el('<input type="file" accept="' + (CFG.accept || ".png,.pdf") + '" style="display:none">');
     drop.addEventListener("click", function () { file.click(); });
     ["dragover", "dragenter"].forEach(function (e) { drop.addEventListener(e, function (ev) { ev.preventDefault(); drop.classList.add("drag"); }); });
     ["dragleave", "drop"].forEach(function (e) { drop.addEventListener(e, function (ev) { ev.preventDefault(); drop.classList.remove("drag"); }); });
@@ -191,7 +191,7 @@
       rng.addEventListener("input", function () { state.artScale = rng.value / 100; renderView(); });
       sl.appendChild(rng); ctrl.appendChild(sl);
     }
-    ctrl.appendChild(el('<p class="fdtf-note">' + t("perso_note", "Dica: para melhor qualidade de impressão, usa ficheiros vetoriais (SVG/PDF) ou PNG em alta resolução com fundo transparente.") + '</p>'));
+    ctrl.appendChild(el('<p class="fdtf-note">' + t("perso_note", "Dica: para melhor qualidade de impressão, envia um PDF pronto para impressão ou um PNG em alta resolução com fundo transparente.") + '</p>'));
     perso.appendChild(ctrl);
 
     p.appendChild(perso);
