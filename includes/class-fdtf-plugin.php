@@ -65,6 +65,24 @@ class FDTF_Plugin {
 			);
 		}
 
+		$print_sizes = array();
+		foreach ( (array) $s['print_sizes'] as $ps ) {
+			$print_sizes[] = array(
+				'code'  => $ps['code'],
+				'label' => isset( $ps['label'] ) ? $ps['label'] : $ps['code'],
+				'price' => floatval( $ps['price'] ),
+			);
+		}
+
+		$positions = array();
+		foreach ( (array) $s['positions'] as $pos ) {
+			$positions[] = array(
+				'code'        => $pos['code'],
+				'label'       => $pos['label'],
+				'defaultSize' => isset( $pos['default_size'] ) ? $pos['default_size'] : '',
+			);
+		}
+
 		return array(
 			'currency'    => $s['currency'],
 			'vat'         => floatval( $s['vat'] ),
@@ -75,6 +93,8 @@ class FDTF_Plugin {
 			'products'    => $products,
 			'colors'      => array_values( $s['colors'] ),
 			'sizes'       => array_values( $s['sizes'] ),
+			'printSizes'  => $print_sizes,
+			'positions'   => $positions,
 			'ajaxUrl'     => admin_url( 'admin-ajax.php' ),
 			'nonce'       => wp_create_nonce( 'fdtf_nonce' ),
 		);

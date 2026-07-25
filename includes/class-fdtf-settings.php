@@ -45,6 +45,21 @@ class FDTF_Settings {
 				array( 'name' => 'Rosa', 'hex' => '#e85aa0' ),
 			),
 			'sizes'       => array( 'XS', 'S', 'M', 'L', 'XL', 'XXL' ),
+			// Print positions the customer can personalise (front, back, sleeves).
+			'positions'   => array(
+				array( 'code' => 'frente',    'label' => 'Frente (peito)',  'default_size' => 'A4' ),
+				array( 'code' => 'costas',    'label' => 'Costas',          'default_size' => 'A3' ),
+				array( 'code' => 'manga_esq', 'label' => 'Manga esquerda',  'default_size' => 'A6' ),
+				array( 'code' => 'manga_dta', 'label' => 'Manga direita',   'default_size' => 'A6' ),
+			),
+			// Print sizes (A-series) and their price per unit. Placeholder prices — edit to your real tariff.
+			'print_sizes' => array(
+				array( 'code' => 'A7', 'label' => 'A7', 'price' => 1.50 ),
+				array( 'code' => 'A6', 'label' => 'A6', 'price' => 2.00 ),
+				array( 'code' => 'A5', 'label' => 'A5', 'price' => 3.00 ),
+				array( 'code' => 'A4', 'label' => 'A4', 'price' => 4.50 ),
+				array( 'code' => 'A3', 'label' => 'A3', 'price' => 7.00 ),
+			),
 		);
 	}
 
@@ -144,6 +159,50 @@ class FDTF_Settings {
 			}
 		}
 
+		// Print sizes (A-series) with prices.
+		$print_sizes = array();
+		if ( ! empty( $in['psize_code'] ) && is_array( $in['psize_code'] ) ) {
+			foreach ( $in['psize_code'] as $i => $code ) {
+				$code = sanitize_text_field( $code );
+				if ( '' === $code ) {
+					continue;
+				}
+				$label = isset( $in['psize_label'][ $i ] ) && '' !== $in['psize_label'][ $i ]
+					? sanitize_text_field( $in['psize_label'][ $i ] )
+					: $code;
+				$print_sizes[] = array(
+					'code'  => $code,
+					'label' => $label,
+					'price' => isset( $in['psize_price'][ $i ] ) ? round( floatval( $in['psize_price'][ $i ] ), 2 ) : 0,
+				);
+			}
+		}
+		if ( $print_sizes ) {
+			$out['print_sizes'] = $print_sizes;
+		}
+
+		// Print positions (front / back / sleeves).
+		$positions = array();
+		if ( ! empty( $in['pos_label'] ) && is_array( $in['pos_label'] ) ) {
+			foreach ( $in['pos_label'] as $i => $label ) {
+				$label = sanitize_text_field( $label );
+				if ( '' === $label ) {
+					continue;
+				}
+				$code = isset( $in['pos_code'][ $i ] ) && '' !== $in['pos_code'][ $i ]
+					? sanitize_key( $in['pos_code'][ $i ] )
+					: sanitize_key( $label );
+				$positions[] = array(
+					'code'         => $code,
+					'label'        => $label,
+					'default_size' => isset( $in['pos_default'][ $i ] ) ? sanitize_text_field( $in['pos_default'][ $i ] ) : '',
+				);
+			}
+		}
+		if ( $positions ) {
+			$out['positions'] = $positions;
+		}
+
 		update_option( FDTF_OPTION, $out );
 
 		wp_safe_redirect( add_query_arg( array( 'page' => 'fdtf-configurador', 'saved' => '1' ), admin_url( 'admin.php' ) ) );
@@ -233,9 +292,43 @@ class FDTF_Settings {
 				</table>
 				<p><button type="button" class="button" id="fdtf-add-color">+ Adicionar cor</button></p>
 
-				<h2>Tamanhos</h2>
+				<h2>Tamanhos (t-shirt)</h2>
 				<p><input type="text" name="sizes" value="<?php echo esc_attr( implode( ', ', $s['sizes'] ) ); ?>" class="regular-text">
 					<span class="description">Separados por vírgula, ex.: XS, S, M, L, XL, XXL</span></p>
+
+				<h2>Tamanhos de impressão (A7–A3)</h2>
+				<p class="description">Preço por unidade de cada tamanho de impressão. O cliente escolhe o tamanho em cada posição (frente, costas, mangas).</p>
+				<table class="widefat striped" id="fdtf-psizes" style="max-width:520px">
+					<thead><tr><th>Código</th><th>Etiqueta</th><th>Preço/un.</th><th></th></tr></thead>
+					<tbody>
+					<?php foreach ( $s['print_sizes'] as $ps ) : ?>
+						<tr>
+							<td><input type="text" name="psize_code[]" value="<?php echo esc_attr( $ps['code'] ); ?>" class="small-text"></td>
+							<td><input type="text" name="psize_label[]" value="<?php echo esc_attr( isset( $ps['label'] ) ? $ps['label'] : $ps['code'] ); ?>" class="small-text"></td>
+							<td><input type="number" step="0.01" name="psize_price[]" value="<?php echo esc_attr( $ps['price'] ); ?>" class="small-text"></td>
+							<td><button type="button" class="button fdtf-rm">×</button></td>
+						</tr>
+					<?php endforeach; ?>
+					</tbody>
+				</table>
+				<p><button type="button" class="button" id="fdtf-add-psize">+ Adicionar tamanho de impressão</button></p>
+
+				<h2>Posições de impressão</h2>
+				<p class="description">Onde o cliente pode imprimir. Códigos reconhecidos para a pré-visualização: <code>frente</code>, <code>costas</code>, <code>manga_esq</code>, <code>manga_dta</code>.</p>
+				<table class="widefat striped" id="fdtf-positions" style="max-width:640px">
+					<thead><tr><th>Código</th><th>Nome apresentado</th><th>Tamanho por defeito</th><th></th></tr></thead>
+					<tbody>
+					<?php foreach ( $s['positions'] as $pos ) : ?>
+						<tr>
+							<td><input type="text" name="pos_code[]" value="<?php echo esc_attr( $pos['code'] ); ?>" class="small-text"></td>
+							<td><input type="text" name="pos_label[]" value="<?php echo esc_attr( $pos['label'] ); ?>" class="regular-text"></td>
+							<td><input type="text" name="pos_default[]" value="<?php echo esc_attr( isset( $pos['default_size'] ) ? $pos['default_size'] : '' ); ?>" class="small-text" placeholder="A4"></td>
+							<td><button type="button" class="button fdtf-rm">×</button></td>
+						</tr>
+					<?php endforeach; ?>
+					</tbody>
+				</table>
+				<p><button type="button" class="button" id="fdtf-add-position">+ Adicionar posição</button></p>
 
 				<?php submit_button( 'Guardar definições' ); ?>
 			</form>
@@ -273,6 +366,28 @@ class FDTF_Settings {
 				tr.innerHTML =
 					'<td><input type="text" name="color_name[]"></td>' +
 					'<td><input type="color" name="color_hex[]" value="#ffffff"></td>' +
+					'<td><button type="button" class="button fdtf-rm">×</button></td>';
+				tb.appendChild( tr );
+			} );
+
+			document.getElementById( 'fdtf-add-psize' ).addEventListener( 'click', function () {
+				var tb = document.querySelector( '#fdtf-psizes tbody' );
+				var tr = document.createElement( 'tr' );
+				tr.innerHTML =
+					'<td><input type="text" name="psize_code[]" class="small-text"></td>' +
+					'<td><input type="text" name="psize_label[]" class="small-text"></td>' +
+					'<td><input type="number" step="0.01" name="psize_price[]" class="small-text"></td>' +
+					'<td><button type="button" class="button fdtf-rm">×</button></td>';
+				tb.appendChild( tr );
+			} );
+
+			document.getElementById( 'fdtf-add-position' ).addEventListener( 'click', function () {
+				var tb = document.querySelector( '#fdtf-positions tbody' );
+				var tr = document.createElement( 'tr' );
+				tr.innerHTML =
+					'<td><input type="text" name="pos_code[]" class="small-text"></td>' +
+					'<td><input type="text" name="pos_label[]" class="regular-text"></td>' +
+					'<td><input type="text" name="pos_default[]" class="small-text" placeholder="A4"></td>' +
 					'<td><button type="button" class="button fdtf-rm">×</button></td>';
 				tb.appendChild( tr );
 			} );

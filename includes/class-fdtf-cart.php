@@ -126,15 +126,52 @@ class FDTF_Cart {
 			wp_send_json_error( array( 'message' => 'Escolhe pelo menos 1 unidade.' ) );
 		}
 
-		// Handle the uploaded art (optional).
-		$art = $this->handle_upload( $s );
-		if ( is_wp_error( $art ) ) {
-			wp_send_json_error( array( 'message' => $art->get_error_message() ) );
+		// Trusted lookups for positions & print sizes.
+		$pos_map = array();
+		foreach ( $s['positions'] as $p ) {
+			$pos_map[ $p['code'] ] = $p['label'];
+		}
+		$size_map = array();
+		foreach ( $s['print_sizes'] as $ps ) {
+			$size_map[ $ps['code'] ] = floatval( $ps['price'] );
+		}
+
+		// Personalisation positions (front / back / sleeves), each with its own art + print size.
+		$positions   = array();
+		$perso_price = 0.0;
+		if ( ! empty( $data['positions'] ) && is_array( $data['positions'] ) ) {
+			foreach ( $data['positions'] as $pdata ) {
+				$code = isset( $pdata['code'] ) ? sanitize_key( $pdata['code'] ) : '';
+				$size = isset( $pdata['size'] ) ? sanitize_text_field( $pdata['size'] ) : '';
+				if ( ! isset( $pos_map[ $code ] ) || ! isset( $size_map[ $size ] ) ) {
+					continue; // unknown position or size — ignore.
+				}
+
+				// Each declared position must carry its art file.
+				$art = $this->handle_upload( $s, 'art_' . $code );
+				if ( is_wp_error( $art ) ) {
+					wp_send_json_error( array( 'message' => $pos_map[ $code ] . ': ' . $art->get_error_message() ) );
+				}
+				if ( ! $art ) {
+					continue; // no file for this position — skip it.
+				}
+
+				$sprice       = $size_map[ $size ];
+				$perso_price += $sprice;
+				$positions[]  = array(
+					'code'       => $code,
+					'label'      => $pos_map[ $code ],
+					'size'       => $size,
+					'size_price' => $sprice,
+					'art_name'   => $art['name'],
+					'art_url'    => $art['url'],
+					'art_path'   => $art['path'],
+				);
+			}
 		}
 
 		// Server-side price (never trust the client value).
 		$unit_price   = floatval( $product['price'] );
-		$perso_price  = $art ? floatval( $s['print_price'] ) : 0.0;
 		$net_per_unit = $unit_price + $perso_price;
 		$net_total    = round( $net_per_unit * $total_qty, 2 );
 
@@ -147,10 +184,8 @@ class FDTF_Cart {
 			'total_qty'    => $total_qty,
 			'unit_price'   => $unit_price,
 			'perso_price'  => $perso_price,
+			'positions'    => $positions,
 			'line_total'   => $net_total,
-			'art_name'     => $art ? $art['name'] : '',
-			'art_url'      => $art ? $art['url'] : '',
-			'art_path'     => $art ? $art['path'] : '',
 			'uid'          => md5( wp_json_encode( $data ) . microtime( true ) ),
 		);
 
@@ -175,15 +210,16 @@ class FDTF_Cart {
 	/**
 	 * Validate and move the uploaded art file into the uploads folder.
 	 *
-	 * @param array $s Settings.
+	 * @param array  $s     Settings.
+	 * @param string $field The $_FILES field name (e.g. art_frente).
 	 * @return array|WP_Error|null  File info, error, or null if no file.
 	 */
-	private function handle_upload( $s ) {
-		if ( empty( $_FILES['art'] ) || empty( $_FILES['art']['name'] ) ) {
+	private function handle_upload( $s, $field = 'art' ) {
+		if ( empty( $_FILES[ $field ] ) || empty( $_FILES[ $field ]['name'] ) ) {
 			return null;
 		}
 
-		$file    = $_FILES['art'];
+		$file    = $_FILES[ $field ];
 		$max     = intval( $s['max_mb'] ) * 1024 * 1024;
 		$allowed = array_filter( array_map(
 			function ( $e ) { return ltrim( strtolower( trim( $e ) ), '.' ); },
@@ -273,11 +309,16 @@ class FDTF_Cart {
 			}
 			$item_data[] = array( 'key' => 'Tamanhos', 'value' => implode( ', ', $parts ) . ' (' . intval( $f['total_qty'] ) . ' un.)' );
 		}
-		if ( ! empty( $f['art_name'] ) ) {
-			$val = ! empty( $f['art_url'] )
-				? '<a href="' . esc_url( $f['art_url'] ) . '" target="_blank" rel="noopener">' . esc_html( $f['art_name'] ) . '</a>'
-				: esc_html( $f['art_name'] );
-			$item_data[] = array( 'key' => 'Arte', 'value' => $val );
+		if ( ! empty( $f['positions'] ) && is_array( $f['positions'] ) ) {
+			foreach ( $f['positions'] as $pos ) {
+				$art = ! empty( $pos['art_url'] )
+					? ' — <a href="' . esc_url( $pos['art_url'] ) . '" target="_blank" rel="noopener">' . esc_html( $pos['art_name'] ) . '</a>'
+					: ( ! empty( $pos['art_name'] ) ? ' — ' . esc_html( $pos['art_name'] ) : '' );
+				$item_data[] = array(
+					'key'   => esc_html( $pos['label'] ),
+					'value' => esc_html( $pos['size'] ) . $art,
+				);
+			}
 		}
 		return $item_data;
 	}
@@ -330,10 +371,16 @@ class FDTF_Cart {
 			$item->add_meta_data( 'Tamanhos', implode( ', ', $parts ), true );
 			$item->add_meta_data( 'Unidades', intval( $f['total_qty'] ), true );
 		}
-		if ( ! empty( $f['art_name'] ) ) {
-			$item->add_meta_data( 'Arte (ficheiro)', $f['art_name'], true );
-			if ( ! empty( $f['art_url'] ) ) {
-				$item->add_meta_data( 'Arte (link)', $f['art_url'], true );
+		if ( ! empty( $f['positions'] ) && is_array( $f['positions'] ) ) {
+			foreach ( $f['positions'] as $pos ) {
+				$val = $pos['size'];
+				if ( ! empty( $pos['art_name'] ) ) {
+					$val .= ' · ' . $pos['art_name'];
+				}
+				$item->add_meta_data( $pos['label'], $val, true );
+				if ( ! empty( $pos['art_url'] ) ) {
+					$item->add_meta_data( $pos['label'] . ' (link)', $pos['art_url'], true );
+				}
 			}
 		}
 		// Hidden internal reference for fulfilment.

@@ -56,7 +56,20 @@ window.FDTF_CONFIG = {
     { name: "Laranja", hex: "#ef7d1a" },
     { name: "Rosa", hex: "#e85aa0" }
   ],
-  sizes: ["XS","S","M","L","XL","XXL"]
+  sizes: ["XS","S","M","L","XL","XXL"],
+  positions: [
+    { code: "frente",    label: "Frente (peito)", defaultSize: "A4" },
+    { code: "costas",    label: "Costas",         defaultSize: "A3" },
+    { code: "manga_esq", label: "Manga esquerda", defaultSize: "A6" },
+    { code: "manga_dta", label: "Manga direita",  defaultSize: "A6" }
+  ],
+  printSizes: [
+    { code: "A7", label: "A7", price: 1.50 },
+    { code: "A6", label: "A6", price: 2.00 },
+    { code: "A5", label: "A5", price: 3.00 },
+    { code: "A4", label: "A4", price: 4.50 },
+    { code: "A3", label: "A3", price: 7.00 }
+  ]
 };
 </script>
 <script src="assets/configurator.js"></script>
