@@ -14,7 +14,7 @@
 
   // Print positions (front / back / sleeves) and print sizes (A7..A3).
   var POSITIONS = (CFG.positions && CFG.positions.length) ? CFG.positions : [
-    { code: "frente", label: "Frente (peito)", defaultSize: "A4" },
+    { code: "frente", label: "Frente", defaultSize: "A4" },
     { code: "costas", label: "Costas", defaultSize: "A3" },
     { code: "manga_esq", label: "Manga esquerda", defaultSize: "A6" },
     { code: "manga_dta", label: "Manga direita", defaultSize: "A6" }
@@ -238,16 +238,15 @@
     if (active) head.appendChild(el('<span class="fdtf-chip">' + st.size + ' · ' + money(sizePrice(st.size)) + '/un.</span>'));
     card.appendChild(head);
 
-    // size selector
-    var srow = el('<label class="fdtf-pos-size">' + t("print_size", "Tamanho da impressão") + '</label>');
-    var sel = el('<select></select>');
+    // size selector — all sizes visible at once (no hidden dropdown)
+    card.appendChild(el('<div class="fdtf-pos-size-lbl">' + t("print_size", "Tamanho da impressão") + '</div>'));
+    var opts = el('<div class="fdtf-size-opts"></div>');
     PRINT_SIZES.forEach(function (ps) {
-      var o = el('<option value="' + ps.code + '"' + (ps.code === st.size ? " selected" : "") + '>' + ps.label + ' — ' + money(ps.price) + '/un.</option>');
-      sel.appendChild(o);
+      var o = el('<button type="button" class="fdtf-size-opt' + (ps.code === st.size ? " sel" : "") + '"><span class="sz">' + ps.label + '</span><span class="pr">' + money(ps.price) + '</span></button>');
+      o.addEventListener("click", function () { st.size = ps.code; renderView(); renderSummary(); });
+      opts.appendChild(o);
     });
-    sel.addEventListener("change", function () { st.size = sel.value; renderView(); renderSummary(); });
-    srow.appendChild(sel);
-    card.appendChild(srow);
+    card.appendChild(opts);
 
     // upload / file row
     if (!active) {

@@ -47,7 +47,7 @@ class FDTF_Settings {
 			'sizes'       => array( 'XS', 'S', 'M', 'L', 'XL', 'XXL' ),
 			// Print positions the customer can personalise (front, back, sleeves).
 			'positions'   => array(
-				array( 'code' => 'frente',    'label' => 'Frente (peito)',  'default_size' => 'A4' ),
+				array( 'code' => 'frente',    'label' => 'Frente',          'default_size' => 'A4' ),
 				array( 'code' => 'costas',    'label' => 'Costas',          'default_size' => 'A3' ),
 				array( 'code' => 'manga_esq', 'label' => 'Manga esquerda',  'default_size' => 'A6' ),
 				array( 'code' => 'manga_dta', 'label' => 'Manga direita',   'default_size' => 'A6' ),
