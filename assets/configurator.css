@@ -176,6 +176,12 @@
   background:rgba(255,255,255,.85);border-radius:6px;padding:2px 7px;white-space:nowrap;max-width:96%;overflow:hidden;text-overflow:ellipsis}
 .fdtf-print.empty{background:rgba(255,255,255,.35)}
 
+/* Download mockup */
+.fdtf-dl{margin-top:16px;display:flex;flex-direction:column;align-items:flex-start;gap:6px}
+.fdtf-dl-btn{display:inline-flex;align-items:center;gap:8px}
+.fdtf-dl-btn[disabled]{opacity:.6;cursor:progress}
+.fdtf-dl-note{color:var(--fdtf-muted);font-size:12px}
+
 /* ---------- Position cards (personalisation) ---------- */
 .fdtf-pos-list{display:flex;flex-direction:column;gap:14px}
 .fdtf-pos{border:2px solid var(--fdtf-line);border-radius:12px;padding:14px;background:#fff;transition:.2s}

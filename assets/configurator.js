@@ -330,6 +330,84 @@
     return wrap;
   }
 
+  // ---- downloadable mockup (renders photo + placed art onto a canvas) ----
+  function loadImage(src) {
+    return new Promise(function (res) {
+      if (!src) { res(null); return; }
+      var im = new Image();
+      im.crossOrigin = "anonymous";
+      im.onload = function () { res(im); };
+      im.onerror = function () { res(null); };
+      im.src = src;
+    });
+  }
+  function arRatio(ar) { // "1 / 1.35" -> height/width factor
+    var parts = String(ar || "1 / 1.35").split("/");
+    var n = parseFloat(parts[0]) || 1, d = parseFloat(parts[1]) || 1;
+    return d / n;
+  }
+  // Render one view (front|back) to its own canvas, art placed exactly like the preview.
+  function renderViewCanvas(view) {
+    return loadImage(colorImg(view)).then(function (pimg) {
+      var Wn = pimg ? (pimg.naturalWidth || 600) : 600;
+      var Hn = pimg ? (pimg.naturalHeight || 700) : 700;
+      var scale = Math.min(1, 1000 / Wn);
+      var cw = Math.round(Wn * scale), ch = Math.round(Hn * scale);
+      var cv = document.createElement("canvas"); cv.width = cw; cv.height = ch;
+      var ctx = cv.getContext("2d");
+      ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, cw, ch);
+      if (pimg) ctx.drawImage(pimg, 0, 0, cw, ch);
+      else { // fallback: flat colour rectangle if photo missing
+        ctx.fillStyle = (state.color ? state.color.hex : "#eeeeee"); ctx.fillRect(cw * 0.12, ch * 0.08, cw * 0.76, ch * 0.84);
+      }
+      var zones = zoneSetFor(state.product) || ZONES;
+      var jobs = [];
+      POSITIONS.forEach(function (p) {
+        var z = zones[p.code];
+        if (!z || z.view !== view) return;
+        var st = state.pos[p.code];
+        if (!st || !st.artDataUrl) return;
+        var frac = SIZE_FRAC[st.size] != null ? SIZE_FRAC[st.size] : 0.8;
+        var bw = (z.base * frac / 100) * cw;
+        var bl = ((z.cx - (z.base * frac) / 2) / 100) * cw;
+        var bt = (z.top / 100) * ch;
+        var bh = bw * arRatio(z.ar);
+        jobs.push(loadImage(st.artDataUrl).then(function (aimg) {
+          if (!aimg) return;
+          var s = Math.min(bw / aimg.naturalWidth, bh / aimg.naturalHeight);
+          var dw = aimg.naturalWidth * s, dh = aimg.naturalHeight * s;
+          ctx.drawImage(aimg, bl + (bw - dw) / 2, bt + (bh - dh) / 2, dw, dh);
+        }));
+      });
+      return Promise.all(jobs).then(function () { return cv; });
+    });
+  }
+  function downloadMockup(btn) {
+    var orig = btn ? btn.textContent : "";
+    if (btn) { btn.disabled = true; btn.textContent = t("mockup_wait", "A gerar mockup…"); }
+    Promise.all([renderViewCanvas("front"), renderViewCanvas("back")]).then(function (cvs) {
+      var f = cvs[0], b = cvs[1];
+      var pad = 24, gap = 24, labelH = 34;
+      var W = pad + f.width + gap + b.width + pad;
+      var H = pad + labelH + Math.max(f.height, b.height) + pad;
+      var cv = document.createElement("canvas"); cv.width = W; cv.height = H;
+      var ctx = cv.getContext("2d");
+      ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, W, H);
+      ctx.fillStyle = "#0b1a5b"; ctx.font = "bold 20px Arial, sans-serif"; ctx.textAlign = "center";
+      ctx.fillText(t("view_front", "Frente"), pad + f.width / 2, pad + labelH - 10);
+      ctx.fillText(t("view_back", "Costas"), pad + f.width + gap + b.width / 2, pad + labelH - 10);
+      ctx.drawImage(f, pad, pad + labelH);
+      ctx.drawImage(b, pad + f.width + gap, pad + labelH);
+      var url;
+      try { url = cv.toDataURL("image/png"); }
+      catch (e) { alert(t("mockup_err", "Não foi possível gerar o mockup. Tenta novamente.")); if (btn) { btn.disabled = false; btn.textContent = orig; } return; }
+      var name = "mockup-" + (state.product ? state.product.id : "tshirt") + "-" + (state.color ? state.color.name.toLowerCase().replace(/\s+/g, "-") : "cor") + ".png";
+      var a = document.createElement("a"); a.href = url; a.download = name;
+      document.body.appendChild(a); a.click(); a.remove();
+      if (btn) { btn.disabled = false; btn.textContent = orig; }
+    });
+  }
+
   // STEP 3 — per-position art upload
   function stepPerso() {
     var p = el('<div class="fdtf-panel fdtf-stepview active"></div>');
@@ -485,6 +563,14 @@
     det.appendChild(el('<p class="fdtf-note">' + t("review_note", "Ao adicionar ao carrinho, o pagamento e envio seguem o checkout habitual do site.") + '</p>'));
     perso.appendChild(det);
     p.appendChild(perso);
+
+    // Download the assembled mockup (front + back) as an image.
+    var dlWrap = el('<div class="fdtf-dl"></div>');
+    var dl = el('<button type="button" class="fdtf-btn ghost fdtf-dl-btn">⬇ ' + t("download_mockup", "Descarregar mockup da t-shirt") + '</button>');
+    dl.addEventListener("click", function () { downloadMockup(dl); });
+    dlWrap.appendChild(dl);
+    dlWrap.appendChild(el('<small class="fdtf-dl-note">' + t("download_note", "Guarda uma imagem da t-shirt montada (frente e costas) para pré-visualização.") + '</small>'));
+    p.appendChild(dlWrap);
     return p;
   }
 
