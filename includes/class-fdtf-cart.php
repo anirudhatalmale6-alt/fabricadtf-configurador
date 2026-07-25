@@ -127,16 +127,18 @@ class FDTF_Cart {
 		}
 
 		// Trusted lookups for positions & print sizes.
-		$pos_map = array();
+		$pos_map      = array();
+		$pos_allowed  = array();
 		foreach ( $s['positions'] as $p ) {
-			$pos_map[ $p['code'] ] = $p['label'];
+			$pos_map[ $p['code'] ]     = $p['label'];
+			$pos_allowed[ $p['code'] ] = ( isset( $p['sizes'] ) && is_array( $p['sizes'] ) ) ? $p['sizes'] : array();
 		}
 		$size_map = array();
 		foreach ( $s['print_sizes'] as $ps ) {
 			$size_map[ $ps['code'] ] = floatval( $ps['price'] );
 		}
 
-		// Personalisation positions (front / back / sleeves), each with its own art + print size.
+		// Personalisation positions (front / back / sleeves / chest), each with its own art + print size.
 		$positions   = array();
 		$perso_price = 0.0;
 		if ( ! empty( $data['positions'] ) && is_array( $data['positions'] ) ) {
@@ -145,6 +147,11 @@ class FDTF_Cart {
 				$size = isset( $pdata['size'] ) ? sanitize_text_field( $pdata['size'] ) : '';
 				if ( ! isset( $pos_map[ $code ] ) || ! isset( $size_map[ $size ] ) ) {
 					continue; // unknown position or size — ignore.
+				}
+				// Enforce per-position allowed sizes (e.g. sleeves only A7/A6).
+				$allowed = $pos_allowed[ $code ];
+				if ( ! empty( $allowed ) && ! in_array( $size, $allowed, true ) ) {
+					wp_send_json_error( array( 'message' => $pos_map[ $code ] . ': tamanho ' . $size . ' não permitido.' ) );
 				}
 
 				// Each declared position must carry its art file.
@@ -170,10 +177,56 @@ class FDTF_Cart {
 			}
 		}
 
+		// Optional extras (checkboxes) — validate against trusted config.
+		$extras       = array();
+		$extras_unit  = 0.0;
+		$extras_order = 0.0;
+		$sel_extras   = ( ! empty( $data['extras'] ) && is_array( $data['extras'] ) ) ? array_map( 'sanitize_key', $data['extras'] ) : array();
+		foreach ( (array) $s['extras'] as $e ) {
+			if ( in_array( sanitize_key( $e['code'] ), $sel_extras, true ) ) {
+				$eprice = floatval( $e['price'] );
+				$eper   = ( isset( $e['per'] ) && 'order' === $e['per'] ) ? 'order' : 'unit';
+				if ( 'order' === $eper ) {
+					$extras_order += $eprice;
+				} else {
+					$extras_unit += $eprice;
+				}
+				$extras[] = array( 'code' => $e['code'], 'label' => $e['label'], 'price' => $eprice, 'per' => $eper );
+			}
+		}
+
+		// Production time — validate and compute surcharge.
+		$prod_code    = isset( $data['production'] ) ? sanitize_key( $data['production'] ) : '';
+		$production   = null;
+		$prod_pct     = 0.0;
+		$prod_unit_fx = 0.0;
+		foreach ( (array) $s['production'] as $pr ) {
+			if ( sanitize_key( $pr['code'] ) === $prod_code ) {
+				$production = $pr;
+				break;
+			}
+		}
+		if ( ! $production ) {
+			// fall back to default / first.
+			foreach ( (array) $s['production'] as $pr ) {
+				if ( ! empty( $pr['default'] ) ) { $production = $pr; break; }
+			}
+			if ( ! $production && ! empty( $s['production'] ) ) {
+				$production = $s['production'][0];
+			}
+		}
+		if ( $production ) {
+			$prod_pct     = floatval( $production['pct'] );
+			$prod_unit_fx = floatval( $production['unit'] );
+		}
+
 		// Server-side price (never trust the client value).
-		$unit_price   = floatval( $product['price'] );
-		$net_per_unit = $unit_price + $perso_price;
-		$net_total    = round( $net_per_unit * $total_qty, 2 );
+		$unit_price      = floatval( $product['price'] );
+		$prod_surcharge  = round( ( $unit_price + $perso_price + $extras_unit ) * $prod_pct / 100 + $prod_unit_fx, 2 );
+		$net_per_unit    = $unit_price + $perso_price + $extras_unit + $prod_surcharge;
+		$net_total       = round( $net_per_unit * $total_qty + $extras_order, 2 );
+
+		$notes = isset( $data['notes'] ) ? sanitize_textarea_field( $data['notes'] ) : '';
 
 		$fdtf = array(
 			'product_id'   => $product['id'],
@@ -185,6 +238,10 @@ class FDTF_Cart {
 			'unit_price'   => $unit_price,
 			'perso_price'  => $perso_price,
 			'positions'    => $positions,
+			'extras'       => $extras,
+			'production'   => $production ? array( 'code' => $production['code'], 'label' => $production['label'], 'days' => intval( $production['days'] ) ) : null,
+			'prod_surcharge' => $prod_surcharge,
+			'notes'        => $notes,
 			'line_total'   => $net_total,
 			'uid'          => md5( wp_json_encode( $data ) . microtime( true ) ),
 		);
@@ -320,6 +377,21 @@ class FDTF_Cart {
 				);
 			}
 		}
+		if ( ! empty( $f['extras'] ) && is_array( $f['extras'] ) ) {
+			$names = array();
+			foreach ( $f['extras'] as $e ) {
+				$names[] = esc_html( $e['label'] );
+			}
+			if ( $names ) {
+				$item_data[] = array( 'key' => 'Extras', 'value' => implode( ', ', $names ) );
+			}
+		}
+		if ( ! empty( $f['production']['label'] ) ) {
+			$item_data[] = array( 'key' => 'Produção', 'value' => esc_html( $f['production']['label'] ) );
+		}
+		if ( ! empty( $f['notes'] ) ) {
+			$item_data[] = array( 'key' => 'Notas', 'value' => esc_html( $f['notes'] ) );
+		}
 		return $item_data;
 	}
 
@@ -382,6 +454,21 @@ class FDTF_Cart {
 					$item->add_meta_data( $pos['label'] . ' (link)', $pos['art_url'], true );
 				}
 			}
+		}
+		if ( ! empty( $f['extras'] ) && is_array( $f['extras'] ) ) {
+			$names = array();
+			foreach ( $f['extras'] as $e ) {
+				$names[] = $e['label'];
+			}
+			if ( $names ) {
+				$item->add_meta_data( 'Extras', implode( ', ', $names ), true );
+			}
+		}
+		if ( ! empty( $f['production']['label'] ) ) {
+			$item->add_meta_data( 'Tempo de produção', $f['production']['label'], true );
+		}
+		if ( ! empty( $f['notes'] ) ) {
+			$item->add_meta_data( 'Notas', $f['notes'], true );
 		}
 		// Hidden internal reference for fulfilment.
 		$item->add_meta_data( '_fdtf_data', wp_json_encode( $f ), true );

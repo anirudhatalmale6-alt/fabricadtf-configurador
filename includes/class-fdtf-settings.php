@@ -28,9 +28,15 @@ class FDTF_Settings {
 			'accept'      => '.png,.pdf',
 			'accept_label'=> 'PNG ou PDF · máx 25 MB',
 			'products'    => array(
-				array( 'id' => 'classic', 'name' => 'T-shirt Classic 160g', 'price' => 7.00, 'badge' => 'Mais escolhida', 'badge_hot' => 1 ),
-				array( 'id' => 'premium', 'name' => 'T-shirt Premium 190g', 'price' => 9.50, 'badge' => 'Qualidade superior', 'badge_hot' => 0 ),
-				array( 'id' => 'sport',   'name' => 'T-shirt Sport 135g',   'price' => 8.00, 'badge' => 'Ideal para desporto', 'badge_hot' => 0 ),
+				array( 'id' => 'classic', 'name' => 'T-shirt Classic 160g', 'price' => 7.00, 'badge' => 'Mais escolhida', 'badge_hot' => 1,
+					'desc' => 'T-shirt de adulto de manga curta, 100% algodão em malha lisa 160 g/m²',
+					'features' => array( '100% algodão', 'Malha lisa 160 g/m²', 'Single Jersey' ) ),
+				array( 'id' => 'premium', 'name' => 'T-shirt Premium 190g', 'price' => 9.50, 'badge' => 'Qualidade superior', 'badge_hot' => 0,
+					'desc' => 'T-shirt de adulto de manga curta, 100% algodão penteado 190 g/m²',
+					'features' => array( '100% algodão penteado', 'Malha 190 g/m²', 'Toque mais encorpado' ) ),
+				array( 'id' => 'sport',   'name' => 'T-shirt Sport 135g',   'price' => 8.00, 'badge' => 'Ideal para desporto', 'badge_hot' => 0,
+					'desc' => 'T-shirt técnica de manga curta, poliéster respirável 135 g/m²',
+					'features' => array( '100% poliéster', 'Respirável / dry-fit', 'Leve 135 g/m²' ) ),
 			),
 			'colors'      => array(
 				array( 'name' => 'Branco', 'hex' => '#ffffff' ),
@@ -45,12 +51,14 @@ class FDTF_Settings {
 				array( 'name' => 'Rosa', 'hex' => '#e85aa0' ),
 			),
 			'sizes'       => array( 'XS', 'S', 'M', 'L', 'XL', 'XXL' ),
-			// Print positions the customer can personalise (front, back, sleeves).
+			// Print positions the customer can personalise (front, back, sleeves, chest).
+			// 'sizes' limits which print sizes are allowed for that position (empty = all).
 			'positions'   => array(
-				array( 'code' => 'frente',    'label' => 'Frente',          'default_size' => 'A4' ),
-				array( 'code' => 'costas',    'label' => 'Costas',          'default_size' => 'A3' ),
-				array( 'code' => 'manga_esq', 'label' => 'Manga esquerda',  'default_size' => 'A6' ),
-				array( 'code' => 'manga_dta', 'label' => 'Manga direita',   'default_size' => 'A6' ),
+				array( 'code' => 'frente',    'label' => 'Frente',              'default_size' => 'A4', 'sizes' => array() ),
+				array( 'code' => 'costas',    'label' => 'Costas',              'default_size' => 'A3', 'sizes' => array() ),
+				array( 'code' => 'peito_esq', 'label' => 'Peito (lado coração)', 'default_size' => 'A7', 'sizes' => array( 'A7', 'A6' ) ),
+				array( 'code' => 'manga_esq', 'label' => 'Manga esquerda',      'default_size' => 'A7', 'sizes' => array( 'A7', 'A6' ) ),
+				array( 'code' => 'manga_dta', 'label' => 'Manga direita',       'default_size' => 'A7', 'sizes' => array( 'A7', 'A6' ) ),
 			),
 			// Print sizes (A-series) and their price per unit. Placeholder prices — edit to your real tariff.
 			'print_sizes' => array(
@@ -59,6 +67,24 @@ class FDTF_Settings {
 				array( 'code' => 'A5', 'label' => 'A5', 'price' => 3.00 ),
 				array( 'code' => 'A4', 'label' => 'A4', 'price' => 4.50 ),
 				array( 'code' => 'A3', 'label' => 'A3', 'price' => 7.00 ),
+			),
+			// Size measurements (informative table shown on the sizes step).
+			'measurements' => array(
+				array( 'size' => 'XS',  'width' => 47, 'height' => 67 ),
+				array( 'size' => 'S',   'width' => 50, 'height' => 69 ),
+				array( 'size' => 'M',   'width' => 53, 'height' => 72 ),
+				array( 'size' => 'L',   'width' => 56, 'height' => 74 ),
+				array( 'size' => 'XL',  'width' => 59, 'height' => 76 ),
+				array( 'size' => 'XXL', 'width' => 62, 'height' => 79 ),
+			),
+			// Optional extras (checkboxes). per = unit (por produto) or order (por encomenda).
+			'extras'      => array(
+				array( 'code' => 'embalamento', 'label' => 'Embalamento individual', 'desc' => 'Aplicado por produto', 'price' => 0.30, 'per' => 'unit' ),
+			),
+			// Production time options (radio). pct = % surcharge on unit price; unit = fixed €/un surcharge.
+			'production'  => array(
+				array( 'code' => 'normal',      'label' => 'Normal até 9 dias',      'days' => 9, 'pct' => 0,  'unit' => 0, 'default' => 1 ),
+				array( 'code' => 'prioritaria', 'label' => 'Prioritária até 5 dias', 'days' => 5, 'pct' => 10, 'unit' => 0, 'default' => 0 ),
 			),
 		);
 	}
@@ -122,12 +148,23 @@ class FDTF_Settings {
 				$id = isset( $in['product_id'][ $i ] ) && '' !== $in['product_id'][ $i ]
 					? sanitize_title( $in['product_id'][ $i ] )
 					: sanitize_title( $name );
+				$features = array();
+				if ( isset( $in['product_features'][ $i ] ) ) {
+					foreach ( preg_split( '/\r\n|\r|\n/', $in['product_features'][ $i ] ) as $line ) {
+						$line = sanitize_text_field( trim( $line ) );
+						if ( '' !== $line ) {
+							$features[] = $line;
+						}
+					}
+				}
 				$products[] = array(
 					'id'        => $id,
 					'name'      => $name,
 					'price'     => isset( $in['product_price'][ $i ] ) ? round( floatval( $in['product_price'][ $i ] ), 2 ) : 0,
 					'badge'     => isset( $in['product_badge'][ $i ] ) ? sanitize_text_field( $in['product_badge'][ $i ] ) : '',
 					'badge_hot' => ! empty( $in['product_hot'][ $i ] ) ? 1 : 0,
+					'desc'      => isset( $in['product_desc'][ $i ] ) ? sanitize_text_field( $in['product_desc'][ $i ] ) : '',
+					'features'  => $features,
 				);
 			}
 		}
@@ -192,15 +229,90 @@ class FDTF_Settings {
 				$code = isset( $in['pos_code'][ $i ] ) && '' !== $in['pos_code'][ $i ]
 					? sanitize_key( $in['pos_code'][ $i ] )
 					: sanitize_key( $label );
+				$allowed = array();
+				if ( isset( $in['pos_sizes'][ $i ] ) && '' !== trim( $in['pos_sizes'][ $i ] ) ) {
+					foreach ( explode( ',', $in['pos_sizes'][ $i ] ) as $code_s ) {
+						$code_s = sanitize_text_field( trim( $code_s ) );
+						if ( '' !== $code_s ) {
+							$allowed[] = $code_s;
+						}
+					}
+				}
 				$positions[] = array(
 					'code'         => $code,
 					'label'        => $label,
 					'default_size' => isset( $in['pos_default'][ $i ] ) ? sanitize_text_field( $in['pos_default'][ $i ] ) : '',
+					'sizes'        => $allowed,
 				);
 			}
 		}
 		if ( $positions ) {
 			$out['positions'] = $positions;
+		}
+
+		// Size measurements.
+		$measures = array();
+		if ( ! empty( $in['meas_size'] ) && is_array( $in['meas_size'] ) ) {
+			foreach ( $in['meas_size'] as $i => $sz ) {
+				$sz = sanitize_text_field( $sz );
+				if ( '' === $sz ) {
+					continue;
+				}
+				$measures[] = array(
+					'size'   => $sz,
+					'width'  => isset( $in['meas_width'][ $i ] ) ? floatval( $in['meas_width'][ $i ] ) : 0,
+					'height' => isset( $in['meas_height'][ $i ] ) ? floatval( $in['meas_height'][ $i ] ) : 0,
+				);
+			}
+		}
+		$out['measurements'] = $measures;
+
+		// Optional extras.
+		$extras = array();
+		if ( ! empty( $in['extra_label'] ) && is_array( $in['extra_label'] ) ) {
+			foreach ( $in['extra_label'] as $i => $label ) {
+				$label = sanitize_text_field( $label );
+				if ( '' === $label ) {
+					continue;
+				}
+				$code = isset( $in['extra_code'][ $i ] ) && '' !== $in['extra_code'][ $i ]
+					? sanitize_key( $in['extra_code'][ $i ] )
+					: sanitize_key( $label );
+				$extras[] = array(
+					'code'  => $code,
+					'label' => $label,
+					'desc'  => isset( $in['extra_desc'][ $i ] ) ? sanitize_text_field( $in['extra_desc'][ $i ] ) : '',
+					'price' => isset( $in['extra_price'][ $i ] ) ? round( floatval( $in['extra_price'][ $i ] ), 2 ) : 0,
+					'per'   => ( isset( $in['extra_per'][ $i ] ) && 'order' === $in['extra_per'][ $i ] ) ? 'order' : 'unit',
+				);
+			}
+		}
+		$out['extras'] = $extras;
+
+		// Production time options.
+		$production = array();
+		if ( ! empty( $in['prod_label'] ) && is_array( $in['prod_label'] ) ) {
+			$def = isset( $in['prod_default'] ) ? intval( $in['prod_default'] ) : 0;
+			foreach ( $in['prod_label'] as $i => $label ) {
+				$label = sanitize_text_field( $label );
+				if ( '' === $label ) {
+					continue;
+				}
+				$code = isset( $in['prod_code'][ $i ] ) && '' !== $in['prod_code'][ $i ]
+					? sanitize_key( $in['prod_code'][ $i ] )
+					: sanitize_key( $label );
+				$production[] = array(
+					'code'    => $code,
+					'label'   => $label,
+					'days'    => isset( $in['prod_days'][ $i ] ) ? intval( $in['prod_days'][ $i ] ) : 0,
+					'pct'     => isset( $in['prod_pct'][ $i ] ) ? floatval( $in['prod_pct'][ $i ] ) : 0,
+					'unit'    => isset( $in['prod_unit'][ $i ] ) ? round( floatval( $in['prod_unit'][ $i ] ), 2 ) : 0,
+					'default' => ( (int) $i === $def ) ? 1 : 0,
+				);
+			}
+		}
+		if ( $production ) {
+			$out['production'] = $production;
 		}
 
 		update_option( FDTF_OPTION, $out );
@@ -260,16 +372,19 @@ class FDTF_Settings {
 				</table>
 
 				<h2>Modelos de t-shirt</h2>
+				<p class="description">A descrição e as características (uma por linha) aparecem no cartão de cada modelo, como no exemplo (100% algodão, gramagem, Single Jersey, etc.).</p>
 				<table class="widefat striped" id="fdtf-products">
-					<thead><tr><th>ID</th><th>Nome</th><th>Preço/un.</th><th>Etiqueta</th><th>Destaque</th><th></th></tr></thead>
+					<thead><tr><th>ID</th><th>Nome</th><th>Preço/un.</th><th>Etiqueta</th><th style="text-align:center">Destaque</th><th>Descrição</th><th>Características (1 por linha)</th><th></th></tr></thead>
 					<tbody>
 					<?php foreach ( $s['products'] as $p ) : ?>
 						<tr>
-							<td><input type="text" name="product_id[]" value="<?php echo esc_attr( $p['id'] ); ?>" placeholder="auto"></td>
-							<td><input type="text" name="product_name[]" value="<?php echo esc_attr( $p['name'] ); ?>" class="regular-text"></td>
+							<td><input type="text" name="product_id[]" value="<?php echo esc_attr( $p['id'] ); ?>" placeholder="auto" style="width:80px"></td>
+							<td><input type="text" name="product_name[]" value="<?php echo esc_attr( $p['name'] ); ?>"></td>
 							<td><input type="number" step="0.01" name="product_price[]" value="<?php echo esc_attr( $p['price'] ); ?>" class="small-text"></td>
-							<td><input type="text" name="product_badge[]" value="<?php echo esc_attr( $p['badge'] ); ?>"></td>
-							<td style="text-align:center"><input type="checkbox" name="product_hot[<?php /* index set via JS-free approach below */ ?>]" <?php checked( ! empty( $p['badge_hot'] ) ); ?>></td>
+							<td><input type="text" name="product_badge[]" value="<?php echo esc_attr( $p['badge'] ); ?>" style="width:110px"></td>
+							<td style="text-align:center"><input type="checkbox" name="product_hot[<?php /* index set via JS below */ ?>]" <?php checked( ! empty( $p['badge_hot'] ) ); ?>></td>
+							<td><textarea name="product_desc[]" rows="2" style="width:200px"><?php echo esc_textarea( isset( $p['desc'] ) ? $p['desc'] : '' ); ?></textarea></td>
+							<td><textarea name="product_features[]" rows="3" style="width:200px" placeholder="100% algodão&#10;Malha 160 g/m²&#10;Single Jersey"><?php echo esc_textarea( isset( $p['features'] ) && is_array( $p['features'] ) ? implode( "\n", $p['features'] ) : '' ); ?></textarea></td>
 							<td><button type="button" class="button fdtf-rm">×</button></td>
 						</tr>
 					<?php endforeach; ?>
@@ -314,21 +429,83 @@ class FDTF_Settings {
 				<p><button type="button" class="button" id="fdtf-add-psize">+ Adicionar tamanho de impressão</button></p>
 
 				<h2>Posições de impressão</h2>
-				<p class="description">Onde o cliente pode imprimir. Códigos reconhecidos para a pré-visualização: <code>frente</code>, <code>costas</code>, <code>manga_esq</code>, <code>manga_dta</code>.</p>
-				<table class="widefat striped" id="fdtf-positions" style="max-width:640px">
-					<thead><tr><th>Código</th><th>Nome apresentado</th><th>Tamanho por defeito</th><th></th></tr></thead>
+				<p class="description">Onde o cliente pode imprimir. Códigos reconhecidos para a pré-visualização: <code>frente</code>, <code>costas</code>, <code>peito_esq</code> (lado do coração), <code>manga_esq</code>, <code>manga_dta</code>. Em "Tamanhos permitidos" limita quais os tamanhos de impressão disponíveis nessa posição (vazio = todos). Ex.: nas mangas usar <code>A7,A6</code>.</p>
+				<table class="widefat striped" id="fdtf-positions" style="max-width:820px">
+					<thead><tr><th>Código</th><th>Nome apresentado</th><th>Tamanho por defeito</th><th>Tamanhos permitidos</th><th></th></tr></thead>
 					<tbody>
 					<?php foreach ( $s['positions'] as $pos ) : ?>
 						<tr>
 							<td><input type="text" name="pos_code[]" value="<?php echo esc_attr( $pos['code'] ); ?>" class="small-text"></td>
 							<td><input type="text" name="pos_label[]" value="<?php echo esc_attr( $pos['label'] ); ?>" class="regular-text"></td>
 							<td><input type="text" name="pos_default[]" value="<?php echo esc_attr( isset( $pos['default_size'] ) ? $pos['default_size'] : '' ); ?>" class="small-text" placeholder="A4"></td>
+							<td><input type="text" name="pos_sizes[]" value="<?php echo esc_attr( isset( $pos['sizes'] ) && is_array( $pos['sizes'] ) ? implode( ',', $pos['sizes'] ) : '' ); ?>" placeholder="todos" style="width:150px"></td>
 							<td><button type="button" class="button fdtf-rm">×</button></td>
 						</tr>
 					<?php endforeach; ?>
 					</tbody>
 				</table>
 				<p><button type="button" class="button" id="fdtf-add-position">+ Adicionar posição</button></p>
+
+				<h2>Medidas por tamanho (informativo)</h2>
+				<p class="description">Tabela de medidas mostrada ao cliente no passo dos tamanhos (Largura / Altura em cm).</p>
+				<table class="widefat striped" id="fdtf-measures" style="max-width:520px">
+					<thead><tr><th>Tamanho</th><th>Largura (cm)</th><th>Altura (cm)</th><th></th></tr></thead>
+					<tbody>
+					<?php foreach ( $s['measurements'] as $m ) : ?>
+						<tr>
+							<td><input type="text" name="meas_size[]" value="<?php echo esc_attr( $m['size'] ); ?>" class="small-text"></td>
+							<td><input type="number" step="0.1" name="meas_width[]" value="<?php echo esc_attr( $m['width'] ); ?>" class="small-text"></td>
+							<td><input type="number" step="0.1" name="meas_height[]" value="<?php echo esc_attr( $m['height'] ); ?>" class="small-text"></td>
+							<td><button type="button" class="button fdtf-rm">×</button></td>
+						</tr>
+					<?php endforeach; ?>
+					</tbody>
+				</table>
+				<p><button type="button" class="button" id="fdtf-add-measure">+ Adicionar medida</button></p>
+
+				<h2>Extras opcionais</h2>
+				<p class="description">Opções adicionais (checkbox). "Por" = <code>unit</code> (por produto/unidade) ou <code>order</code> (por encomenda).</p>
+				<table class="widefat striped" id="fdtf-extras" style="max-width:760px">
+					<thead><tr><th>Código</th><th>Nome</th><th>Descrição</th><th>Preço</th><th>Por</th><th></th></tr></thead>
+					<tbody>
+					<?php foreach ( $s['extras'] as $e ) : ?>
+						<tr>
+							<td><input type="text" name="extra_code[]" value="<?php echo esc_attr( $e['code'] ); ?>" class="small-text"></td>
+							<td><input type="text" name="extra_label[]" value="<?php echo esc_attr( $e['label'] ); ?>"></td>
+							<td><input type="text" name="extra_desc[]" value="<?php echo esc_attr( isset( $e['desc'] ) ? $e['desc'] : '' ); ?>"></td>
+							<td><input type="number" step="0.01" name="extra_price[]" value="<?php echo esc_attr( $e['price'] ); ?>" class="small-text"></td>
+							<td>
+								<select name="extra_per[]">
+									<option value="unit" <?php selected( ! isset( $e['per'] ) || 'order' !== $e['per'] ); ?>>unit</option>
+									<option value="order" <?php selected( isset( $e['per'] ) && 'order' === $e['per'] ); ?>>order</option>
+								</select>
+							</td>
+							<td><button type="button" class="button fdtf-rm">×</button></td>
+						</tr>
+					<?php endforeach; ?>
+					</tbody>
+				</table>
+				<p><button type="button" class="button" id="fdtf-add-extra">+ Adicionar extra</button></p>
+
+				<h2>Tempo de produção</h2>
+				<p class="description">Opções de prazo (radio). "%": acréscimo em percentagem sobre o preço unitário. "€/un.": acréscimo fixo por unidade. Marca uma como "Por defeito".</p>
+				<table class="widefat striped" id="fdtf-production" style="max-width:820px">
+					<thead><tr><th>Código</th><th>Nome</th><th>Dias</th><th>% acréscimo</th><th>€/un. acréscimo</th><th>Por defeito</th><th></th></tr></thead>
+					<tbody>
+					<?php foreach ( $s['production'] as $i => $pr ) : ?>
+						<tr>
+							<td><input type="text" name="prod_code[]" value="<?php echo esc_attr( $pr['code'] ); ?>" class="small-text"></td>
+							<td><input type="text" name="prod_label[]" value="<?php echo esc_attr( $pr['label'] ); ?>"></td>
+							<td><input type="number" name="prod_days[]" value="<?php echo esc_attr( $pr['days'] ); ?>" class="small-text"></td>
+							<td><input type="number" step="0.01" name="prod_pct[]" value="<?php echo esc_attr( $pr['pct'] ); ?>" class="small-text"></td>
+							<td><input type="number" step="0.01" name="prod_unit[]" value="<?php echo esc_attr( $pr['unit'] ); ?>" class="small-text"></td>
+							<td style="text-align:center"><input type="radio" name="prod_default" value="<?php echo esc_attr( $i ); ?>" <?php checked( ! empty( $pr['default'] ) ); ?>></td>
+							<td><button type="button" class="button fdtf-rm">×</button></td>
+						</tr>
+					<?php endforeach; ?>
+					</tbody>
+				</table>
+				<p><button type="button" class="button" id="fdtf-add-production">+ Adicionar opção de produção</button></p>
 
 				<?php submit_button( 'Guardar definições' ); ?>
 			</form>
@@ -346,15 +523,26 @@ class FDTF_Settings {
 			var prodTable = document.getElementById( 'fdtf-products' );
 			reindexHot( prodTable );
 
+			// Keep the "por defeito" radio values in sync with row order.
+			function reindexProdDefault() {
+				document.querySelectorAll( '#fdtf-production tbody tr' ).forEach( function ( tr, i ) {
+					var rb = tr.querySelector( 'input[type=radio]' );
+					if ( rb ) { rb.value = i; }
+				} );
+			}
+			reindexProdDefault();
+
 			document.getElementById( 'fdtf-add-product' ).addEventListener( 'click', function () {
 				var tb = prodTable.querySelector( 'tbody' );
 				var tr = document.createElement( 'tr' );
 				tr.innerHTML =
-					'<td><input type="text" name="product_id[]" placeholder="auto"></td>' +
-					'<td><input type="text" name="product_name[]" class="regular-text"></td>' +
+					'<td><input type="text" name="product_id[]" placeholder="auto" style="width:80px"></td>' +
+					'<td><input type="text" name="product_name[]"></td>' +
 					'<td><input type="number" step="0.01" name="product_price[]" class="small-text"></td>' +
-					'<td><input type="text" name="product_badge[]"></td>' +
+					'<td><input type="text" name="product_badge[]" style="width:110px"></td>' +
 					'<td style="text-align:center"><input type="checkbox"></td>' +
+					'<td><textarea name="product_desc[]" rows="2" style="width:200px"></textarea></td>' +
+					'<td><textarea name="product_features[]" rows="3" style="width:200px"></textarea></td>' +
 					'<td><button type="button" class="button fdtf-rm">×</button></td>';
 				tb.appendChild( tr );
 				reindexHot( prodTable );
@@ -388,8 +576,48 @@ class FDTF_Settings {
 					'<td><input type="text" name="pos_code[]" class="small-text"></td>' +
 					'<td><input type="text" name="pos_label[]" class="regular-text"></td>' +
 					'<td><input type="text" name="pos_default[]" class="small-text" placeholder="A4"></td>' +
+					'<td><input type="text" name="pos_sizes[]" placeholder="todos" style="width:150px"></td>' +
 					'<td><button type="button" class="button fdtf-rm">×</button></td>';
 				tb.appendChild( tr );
+			} );
+
+			document.getElementById( 'fdtf-add-measure' ).addEventListener( 'click', function () {
+				var tb = document.querySelector( '#fdtf-measures tbody' );
+				var tr = document.createElement( 'tr' );
+				tr.innerHTML =
+					'<td><input type="text" name="meas_size[]" class="small-text"></td>' +
+					'<td><input type="number" step="0.1" name="meas_width[]" class="small-text"></td>' +
+					'<td><input type="number" step="0.1" name="meas_height[]" class="small-text"></td>' +
+					'<td><button type="button" class="button fdtf-rm">×</button></td>';
+				tb.appendChild( tr );
+			} );
+
+			document.getElementById( 'fdtf-add-extra' ).addEventListener( 'click', function () {
+				var tb = document.querySelector( '#fdtf-extras tbody' );
+				var tr = document.createElement( 'tr' );
+				tr.innerHTML =
+					'<td><input type="text" name="extra_code[]" class="small-text"></td>' +
+					'<td><input type="text" name="extra_label[]"></td>' +
+					'<td><input type="text" name="extra_desc[]"></td>' +
+					'<td><input type="number" step="0.01" name="extra_price[]" class="small-text"></td>' +
+					'<td><select name="extra_per[]"><option value="unit">unit</option><option value="order">order</option></select></td>' +
+					'<td><button type="button" class="button fdtf-rm">×</button></td>';
+				tb.appendChild( tr );
+			} );
+
+			document.getElementById( 'fdtf-add-production' ).addEventListener( 'click', function () {
+				var tb = document.querySelector( '#fdtf-production tbody' );
+				var tr = document.createElement( 'tr' );
+				tr.innerHTML =
+					'<td><input type="text" name="prod_code[]" class="small-text"></td>' +
+					'<td><input type="text" name="prod_label[]"></td>' +
+					'<td><input type="number" name="prod_days[]" class="small-text"></td>' +
+					'<td><input type="number" step="0.01" name="prod_pct[]" class="small-text"></td>' +
+					'<td><input type="number" step="0.01" name="prod_unit[]" class="small-text"></td>' +
+					'<td style="text-align:center"><input type="radio" name="prod_default"></td>' +
+					'<td><button type="button" class="button fdtf-rm">×</button></td>';
+				tb.appendChild( tr );
+				reindexProdDefault();
 			} );
 
 			document.addEventListener( 'click', function ( e ) {
@@ -398,6 +626,7 @@ class FDTF_Settings {
 					var table = tr.closest( 'table' );
 					tr.remove();
 					if ( table.id === 'fdtf-products' ) { reindexHot( table ); }
+					if ( table.id === 'fdtf-production' ) { reindexProdDefault(); }
 				}
 			} );
 		} )();

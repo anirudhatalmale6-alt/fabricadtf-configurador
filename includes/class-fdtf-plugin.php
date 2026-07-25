@@ -62,6 +62,8 @@ class FDTF_Plugin {
 				'price'    => floatval( $p['price'] ),
 				'badge'    => isset( $p['badge'] ) ? $p['badge'] : '',
 				'badgeHot' => ! empty( $p['badge_hot'] ),
+				'desc'     => isset( $p['desc'] ) ? $p['desc'] : '',
+				'features' => isset( $p['features'] ) && is_array( $p['features'] ) ? array_values( $p['features'] ) : array(),
 			);
 		}
 
@@ -80,23 +82,59 @@ class FDTF_Plugin {
 				'code'        => $pos['code'],
 				'label'       => $pos['label'],
 				'defaultSize' => isset( $pos['default_size'] ) ? $pos['default_size'] : '',
+				'sizes'       => isset( $pos['sizes'] ) && is_array( $pos['sizes'] ) ? array_values( $pos['sizes'] ) : array(),
+			);
+		}
+
+		$measurements = array();
+		foreach ( (array) $s['measurements'] as $m ) {
+			$measurements[] = array(
+				'size'   => $m['size'],
+				'width'  => floatval( $m['width'] ),
+				'height' => floatval( $m['height'] ),
+			);
+		}
+
+		$extras = array();
+		foreach ( (array) $s['extras'] as $e ) {
+			$extras[] = array(
+				'code'  => $e['code'],
+				'label' => $e['label'],
+				'desc'  => isset( $e['desc'] ) ? $e['desc'] : '',
+				'price' => floatval( $e['price'] ),
+				'per'   => ( isset( $e['per'] ) && 'order' === $e['per'] ) ? 'order' : 'unit',
+			);
+		}
+
+		$production = array();
+		foreach ( (array) $s['production'] as $pr ) {
+			$production[] = array(
+				'code'    => $pr['code'],
+				'label'   => $pr['label'],
+				'days'    => intval( $pr['days'] ),
+				'pct'     => floatval( $pr['pct'] ),
+				'unit'    => floatval( $pr['unit'] ),
+				'default' => ! empty( $pr['default'] ),
 			);
 		}
 
 		return array(
-			'currency'    => $s['currency'],
-			'vat'         => floatval( $s['vat'] ),
-			'printPrice'  => floatval( $s['print_price'] ),
-			'maxMB'       => intval( $s['max_mb'] ),
-			'accept'      => $s['accept'],
-			'acceptLabel' => $s['accept_label'],
-			'products'    => $products,
-			'colors'      => array_values( $s['colors'] ),
-			'sizes'       => array_values( $s['sizes'] ),
-			'printSizes'  => $print_sizes,
-			'positions'   => $positions,
-			'ajaxUrl'     => admin_url( 'admin-ajax.php' ),
-			'nonce'       => wp_create_nonce( 'fdtf_nonce' ),
+			'currency'     => $s['currency'],
+			'vat'          => floatval( $s['vat'] ),
+			'printPrice'   => floatval( $s['print_price'] ),
+			'maxMB'        => intval( $s['max_mb'] ),
+			'accept'       => $s['accept'],
+			'acceptLabel'  => $s['accept_label'],
+			'products'     => $products,
+			'colors'       => array_values( $s['colors'] ),
+			'sizes'        => array_values( $s['sizes'] ),
+			'printSizes'   => $print_sizes,
+			'positions'    => $positions,
+			'measurements' => $measurements,
+			'extras'       => $extras,
+			'production'   => $production,
+			'ajaxUrl'      => admin_url( 'admin-ajax.php' ),
+			'nonce'        => wp_create_nonce( 'fdtf_nonce' ),
 		);
 	}
 
