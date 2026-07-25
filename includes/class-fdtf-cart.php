@@ -240,7 +240,7 @@ class FDTF_Cart {
 		}
 
 		// Server-side price (never trust the client value).
-		$unit_price      = floatval( $product['price'] );
+		$unit_price      = $this->tier_price( $product, $total_qty );
 		$prod_surcharge  = round( ( $unit_price + $perso_price + $extras_unit ) * $prod_pct / 100 + $prod_unit_fx, 2 );
 		$net_per_unit    = $unit_price + $perso_price + $extras_unit + $prod_surcharge;
 		$net_total       = round( $net_per_unit * $total_qty + $extras_order, 2 );
@@ -290,6 +290,29 @@ class FDTF_Cart {
 	 * @param string $field The $_FILES field name (e.g. art_frente).
 	 * @return array|WP_Error|null  File info, error, or null if no file.
 	 */
+	/**
+	 * Per-unit base price for the given total quantity, using the product's
+	 * quantity tiers (bulk pricing). Falls back to the flat price if no tiers.
+	 */
+	private function tier_price( $product, $qty ) {
+		$base = floatval( $product['price'] );
+		if ( empty( $product['tiers'] ) || ! is_array( $product['tiers'] ) ) {
+			return $base;
+		}
+		$q = max( intval( $qty ), 0 );
+		$fallback = null;
+		foreach ( $product['tiers'] as $t ) {
+			$min = intval( $t['min'] );
+			$max = intval( $t['max'] );
+			if ( null === $fallback ) { $fallback = floatval( $t['price'] ); }
+			$hi = ( $max > 0 ) ? $max : PHP_INT_MAX;
+			if ( $q >= $min && $q <= $hi ) {
+				return floatval( $t['price'] );
+			}
+		}
+		return ( null !== $fallback ) ? $fallback : $base;
+	}
+
 	private function handle_upload( $s, $field = 'art' ) {
 		if ( empty( $_FILES[ $field ] ) || empty( $_FILES[ $field ]['name'] ) ) {
 			return null;

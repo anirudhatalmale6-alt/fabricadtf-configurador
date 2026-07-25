@@ -28,18 +28,45 @@ class FDTF_Settings {
 			'accept'      => '.png,.pdf',
 			'accept_label'=> 'PNG ou PDF · máx 25 MB',
 			'products'    => array(
-					array( 'id' => 'classic', 'name' => 'T-shirt Classic 160g', 'price' => 7.00, 'badge' => 'Mais escolhida', 'badge_hot' => 1,
-						'desc' => 'T-shirt de adulto de manga curta, 100% algodão em malha lisa 160 g/m²',
-						'features' => array( '100% algodão', 'Malha lisa 160 g/m²', 'Single Jersey' ),
-						'color_names' => array( 'Branco', 'Preto', 'Cinza', 'Vermelho', 'Laranja', 'Amarelo', 'Azul Navy', 'Azul Royal', 'Azul claro', 'Verde', 'Verde escuro' ) ),
-					array( 'id' => 'premium', 'name' => 'T-shirt Premium 190g', 'price' => 9.50, 'badge' => 'Qualidade superior', 'badge_hot' => 0,
+					array( 'id' => 'classic', 'name' => 'T-shirt 150gr', 'price' => 6.95, 'badge' => 'Mais escolhida', 'badge_hot' => 1,
+						'desc' => 'T-shirt de adulto de manga curta, 100% algodão em malha lisa 150 g/m²',
+						'features' => array( '100% algodão', 'Malha lisa 150 g/m²', 'Single Jersey' ),
+						'color_names' => array( 'Branco', 'Preto', 'Cinza', 'Vermelho', 'Laranja', 'Amarelo', 'Azul Navy', 'Azul Royal', 'Azul claro', 'Verde', 'Verde escuro' ),
+						'tiers' => array(
+							array( 'min' => 1, 'max' => 9, 'price' => 6.95 ),
+							array( 'min' => 10, 'max' => 49, 'price' => 2.55 ),
+							array( 'min' => 50, 'max' => 99, 'price' => 2.45 ),
+							array( 'min' => 100, 'max' => 249, 'price' => 2.40 ),
+							array( 'min' => 250, 'max' => 499, 'price' => 2.15 ),
+							array( 'min' => 500, 'max' => 999, 'price' => 1.95 ),
+							array( 'min' => 1000, 'max' => 0, 'price' => 1.85 ),
+						) ),
+					array( 'id' => 'premium', 'name' => 'T-shirt 190gr', 'price' => 8.95, 'badge' => 'Qualidade superior', 'badge_hot' => 0,
 						'desc' => 'T-shirt de adulto de manga curta, 100% algodão penteado 190 g/m²',
 						'features' => array( '100% algodão penteado', 'Malha 190 g/m²', 'Toque mais encorpado' ),
-						'color_names' => array( 'Branco', 'Preto', 'Cinza', 'Vermelho', 'Laranja', 'Amarelo', 'Azul Navy', 'Azul Royal', 'Azul claro', 'Verde', 'Verde escuro' ) ),
-					array( 'id' => 'sport',   'name' => 'T-shirt Sport 135g',   'price' => 8.00, 'badge' => 'Ideal para desporto', 'badge_hot' => 0,
+						'color_names' => array( 'Branco', 'Preto', 'Cinza', 'Vermelho', 'Laranja', 'Amarelo', 'Azul Navy', 'Azul Royal', 'Azul claro', 'Verde', 'Verde escuro' ),
+						'tiers' => array(
+							array( 'min' => 1, 'max' => 9, 'price' => 8.95 ),
+							array( 'min' => 10, 'max' => 49, 'price' => 3.85 ),
+							array( 'min' => 50, 'max' => 99, 'price' => 3.40 ),
+							array( 'min' => 100, 'max' => 249, 'price' => 3.05 ),
+							array( 'min' => 250, 'max' => 499, 'price' => 2.85 ),
+							array( 'min' => 500, 'max' => 999, 'price' => 2.75 ),
+							array( 'min' => 1000, 'max' => 0, 'price' => 2.65 ),
+						) ),
+					array( 'id' => 'sport',   'name' => 'T-shirt Técnica 135gr', 'price' => 6.95, 'badge' => 'Ideal para desporto', 'badge_hot' => 0,
 						'desc' => 'T-shirt técnica de manga curta, poliéster respirável 135 g/m²',
 						'features' => array( '100% poliéster', 'Respirável / dry-fit', 'Leve 135 g/m²' ),
-						'color_names' => array( 'Branco', 'Preto', 'Vermelho', 'Laranja florescente', 'Amarelo florescente', 'Azul Navy', 'Azul Royal', 'Verde florescente', 'Verde kelly' ) ),
+						'color_names' => array( 'Branco', 'Preto', 'Vermelho', 'Laranja florescente', 'Amarelo florescente', 'Azul Navy', 'Azul Royal', 'Verde florescente', 'Verde kelly' ),
+						'tiers' => array(
+							array( 'min' => 1, 'max' => 9, 'price' => 6.95 ),
+							array( 'min' => 10, 'max' => 49, 'price' => 2.55 ),
+							array( 'min' => 50, 'max' => 99, 'price' => 2.45 ),
+							array( 'min' => 100, 'max' => 249, 'price' => 2.40 ),
+							array( 'min' => 250, 'max' => 499, 'price' => 2.13 ),
+							array( 'min' => 500, 'max' => 999, 'price' => 1.95 ),
+							array( 'min' => 1000, 'max' => 0, 'price' => 1.85 ),
+						) ),
 				),
 				// Master colour palette (name + hex). Each product may use a subset via 'color_names' (empty = all).
 				'colors'      => array(
@@ -71,11 +98,11 @@ class FDTF_Settings {
 			),
 			// Print sizes (A-series) and their price per unit. Placeholder prices — edit to your real tariff.
 			'print_sizes' => array(
-				array( 'code' => 'A7', 'label' => 'A7', 'price' => 1.50 ),
-				array( 'code' => 'A6', 'label' => 'A6', 'price' => 2.00 ),
-				array( 'code' => 'A5', 'label' => 'A5', 'price' => 3.00 ),
-				array( 'code' => 'A4', 'label' => 'A4', 'price' => 4.50 ),
-				array( 'code' => 'A3', 'label' => 'A3', 'price' => 7.00 ),
+				array( 'code' => 'A7', 'label' => 'A7', 'price' => 0.30 ),
+				array( 'code' => 'A6', 'label' => 'A6', 'price' => 0.45 ),
+				array( 'code' => 'A5', 'label' => 'A5', 'price' => 0.70 ),
+				array( 'code' => 'A4', 'label' => 'A4', 'price' => 0.75 ),
+				array( 'code' => 'A3', 'label' => 'A3', 'price' => 1.15 ),
 			),
 			// Size measurements (informative table shown on the sizes step).
 			'measurements' => array(
@@ -88,7 +115,7 @@ class FDTF_Settings {
 			),
 			// Optional extras (checkboxes). per = unit (por produto) or order (por encomenda).
 			'extras'      => array(
-				array( 'code' => 'embalamento', 'label' => 'Embalamento individual', 'desc' => 'Aplicado por produto', 'price' => 0.30, 'per' => 'unit' ),
+				array( 'code' => 'embalamento', 'label' => 'Embalamento individual', 'desc' => 'Aplicado por produto', 'price' => 0.25, 'per' => 'unit' ),
 			),
 			// Production time options (radio). pct = % surcharge on unit price; unit = fixed €/un surcharge.
 			'production'  => array(
@@ -103,6 +130,20 @@ class FDTF_Settings {
 	 *
 	 * @return array
 	 */
+	/**
+	 * Format tiers as editable text lines (min-max:price, or min+:price for open-ended).
+	 */
+	public static function tiers_to_text( $tiers ) {
+		$out = array();
+		if ( ! empty( $tiers ) && is_array( $tiers ) ) {
+			foreach ( $tiers as $t ) {
+				$mx = empty( $t['max'] ) ? '+' : '-' . intval( $t['max'] );
+				$out[] = intval( $t['min'] ) . $mx . ':' . number_format( floatval( $t['price'] ), 2, '.', '' );
+			}
+		}
+		return implode( "\n", $out );
+	}
+
 	public static function get() {
 		$stored = get_option( FDTF_OPTION );
 		if ( ! is_array( $stored ) ) {
@@ -173,6 +214,16 @@ class FDTF_Settings {
 							if ( '' !== $cn ) { $color_names[] = $cn; }
 						}
 					}
+					$tiers = array();
+					if ( isset( $in['product_tiers'][ $i ] ) ) {
+						foreach ( preg_split( '/\r\n|\r|\n/', $in['product_tiers'][ $i ] ) as $ln ) {
+							$ln = trim( $ln );
+							if ( '' === $ln ) { continue; }
+							if ( preg_match( '/^\s*(\d+)\s*[-\x{2013}]\s*(\d*)\+?\s*:\s*([0-9]+(?:[.,][0-9]+)?)/u', $ln, $m ) ) {
+								$tiers[] = array( 'min' => intval( $m[1] ), 'max' => ( '' === $m[2] ? 0 : intval( $m[2] ) ), 'price' => round( floatval( str_replace( ',', '.', $m[3] ) ), 2 ) );
+							}
+						}
+					}
 					$products[] = array(
 					'id'        => $id,
 					'name'      => $name,
@@ -182,6 +233,7 @@ class FDTF_Settings {
 					'desc'      => isset( $in['product_desc'][ $i ] ) ? sanitize_text_field( $in['product_desc'][ $i ] ) : '',
 					'features'  => $features,
 						'color_names' => $color_names,
+						'tiers'       => $tiers,
 				);
 			}
 		}
@@ -391,7 +443,7 @@ class FDTF_Settings {
 				<h2>Modelos de t-shirt</h2>
 				<p class="description">A descrição e as características (uma por linha) aparecem no cartão de cada modelo, como no exemplo (100% algodão, gramagem, Single Jersey, etc.).</p>
 				<table class="widefat striped" id="fdtf-products">
-					<thead><tr><th>ID</th><th>Nome</th><th>Preço/un.</th><th>Etiqueta</th><th style="text-align:center">Destaque</th><th>Descrição</th><th>Características (1 por linha)</th><th>Cores (uma por linha; vazio = todas)</th><th></th></tr></thead>
+					<thead><tr><th>ID</th><th>Nome</th><th>Preço/un.</th><th>Etiqueta</th><th style="text-align:center">Destaque</th><th>Descrição</th><th>Características (1 por linha)</th><th>Cores (uma por linha; vazio = todas)</th><th>Escalões (min-max:preço, 1 por linha)</th><th></th></tr></thead>
 					<tbody>
 					<?php foreach ( $s['products'] as $p ) : ?>
 						<tr>
@@ -403,6 +455,7 @@ class FDTF_Settings {
 							<td><textarea name="product_desc[]" rows="2" style="width:200px"><?php echo esc_textarea( isset( $p['desc'] ) ? $p['desc'] : '' ); ?></textarea></td>
 							<td><textarea name="product_features[]" rows="3" style="width:200px" placeholder="100% algodão&#10;Malha 160 g/m²&#10;Single Jersey"><?php echo esc_textarea( isset( $p['features'] ) && is_array( $p['features'] ) ? implode( "\n", $p['features'] ) : '' ); ?></textarea></td>
 							<td><textarea name="product_colors[]" rows="3" style="width:150px" placeholder="Branco&#10;Preto&#10;Cinza&#10;(vazio = todas)"><?php echo esc_textarea( isset( $p['color_names'] ) && is_array( $p['color_names'] ) ? implode( "\n", $p['color_names'] ) : '' ); ?></textarea></td>
+							<td><textarea name="product_tiers[]" rows="4" style="width:150px" placeholder="1-9:6.95&#10;10-49:2.55&#10;1000+:1.85"><?php echo esc_textarea( self::tiers_to_text( isset( $p['tiers'] ) ? $p['tiers'] : array() ) ); ?></textarea></td>
 							<td><button type="button" class="button fdtf-rm">×</button></td>
 						</tr>
 					<?php endforeach; ?>
@@ -562,6 +615,7 @@ class FDTF_Settings {
 					'<td><textarea name="product_desc[]" rows="2" style="width:200px"></textarea></td>' +
 					'<td><textarea name="product_features[]" rows="3" style="width:200px"></textarea></td>' +
 						'<td><textarea name="product_colors[]" rows="3" style="width:150px" placeholder="vazio = todas"></textarea></td>' +
+						'<td><textarea name="product_tiers[]" rows="4" style="width:150px" placeholder="1-9:6.95&#10;1000+:1.85"></textarea></td>' +
 					'<td><button type="button" class="button fdtf-rm">×</button></td>';
 				tb.appendChild( tr );
 				reindexHot( prodTable );

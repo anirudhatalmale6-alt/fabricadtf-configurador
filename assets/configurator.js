@@ -52,6 +52,26 @@
   function colorsFor(prod) {
     return (prod && prod.colors && prod.colors.length) ? prod.colors : colors;
   }
+  // Quantity-tier (bulk) pricing helpers.
+  function productTiers(prod) { return (prod && prod.tiers && prod.tiers.length) ? prod.tiers : null; }
+  function activeTier(prod, qty) {
+    var tiers = productTiers(prod); if (!tiers) return null;
+    var q = Math.max(qty || 0, 0);
+    for (var i = 0; i < tiers.length; i++) { var t = tiers[i]; var mx = (t.max && t.max > 0) ? t.max : Infinity; if (q >= t.min && q <= mx) return t; }
+    return tiers[0];
+  }
+  function unitPriceFor(prod, qty) {
+    if (!prod) return 0;
+    var t = activeTier(prod, qty);
+    if (t) return Number(t.price) || 0;
+    return Number(prod.price) || 0;
+  }
+  function lowestTierPrice(prod) {
+    var tiers = productTiers(prod); if (!tiers) return Number(prod.price) || 0;
+    var mn = Infinity; tiers.forEach(function (t) { var p = Number(t.price) || 0; if (p < mn) mn = p; });
+    return isFinite(mn) ? mn : (Number(prod.price) || 0);
+  }
+  function tierRange(t) { return t.min + (t.max && t.max > 0 ? '-' + t.max : '+') + ' un.'; }
 
   // ---- state ----
   var state = {
@@ -102,7 +122,8 @@
   function selectedExtras() { return EXTRAS.filter(function (e) { return state.extras[e.code]; }); }
   function selectedProduction() { for (var i = 0; i < PRODUCTION.length; i++) if (PRODUCTION[i].code === state.production) return PRODUCTION[i]; return PRODUCTION[0] || null; }
   function pricing() {
-    var base = state.product ? Number(state.product.price) : 0;
+    var q = totalQty();
+    var base = unitPriceFor(state.product, q);
     var perso = persoPerUnit();
     var exU = 0, exO = 0;
     selectedExtras().forEach(function (e) { if (e.per === "order") exO += Number(e.price) || 0; else exU += Number(e.price) || 0; });
@@ -111,10 +132,9 @@
     var pu = prod ? Number(prod.unit) || 0 : 0;
     var prodUnit = r2((base + perso + exU) * pct / 100 + pu);
     var netUnit = base + perso + exU + prodUnit;
-    var q = totalQty();
     var net = r2(netUnit * q + exO);
     var vat = r2(net * VAT);
-    return { base: base, perso: perso, exU: exU, exO: exO, prodUnit: prodUnit, prodPct: pct, netUnit: netUnit, q: q, net: net, vat: vat, total: r2(net + vat) };
+    return { base: base, perso: perso, exU: exU, exO: exO, prodUnit: prodUnit, prodPct: pct, netUnit: netUnit, q: q, net: net, vat: vat, total: r2(net + vat), tier: activeTier(state.product, q) };
   }
 
   // ---- render ----
@@ -163,7 +183,7 @@
         '<h3>' + esc(prod.name) + '</h3>' +
         (prod.desc ? '<p class="fdtf-desc">' + esc(prod.desc) + '</p>' : '') +
         feats +
-        '<div class="price">' + t("from", "desde") + ' <b>' + money(prod.price) + '</b> /un.</div>';
+        '<div class="price">' + t("from", "desde") + ' <b>' + money(lowestTierPrice(prod)) + '</b> /un.</div>';
       c.addEventListener("click", function () {
         state.product = prod;
         var pc = colorsFor(prod);
@@ -203,7 +223,7 @@
       var minus = el('<button type="button" aria-label="menos">−</button>');
       var inp = el('<input type="number" min="0" inputmode="numeric" value="' + q + '">');
       var plus = el('<button type="button" aria-label="mais">+</button>');
-      function set(v) { v = Math.max(0, parseInt(v || 0, 10)); state.qty[sz] = v; inp.value = v; renderSummary(); }
+      function set(v) { v = Math.max(0, parseInt(v || 0, 10)); state.qty[sz] = v; inp.value = v; renderSummary(); updateTierHighlight(); }
       minus.addEventListener("click", function () { set((state.qty[sz] || 0) - 1); });
       plus.addEventListener("click", function () { set((state.qty[sz] || 0) + 1); });
       inp.addEventListener("input", function () { set(inp.value); });
@@ -223,6 +243,22 @@
       tbl += '</tbody></table>';
       det.appendChild(el(tbl));
       p.appendChild(det);
+    }
+
+    // Escal\u00f5es por quantidade (bulk pricing) table
+    var _tiers = productTiers(state.product);
+    if (_tiers) {
+      var _at = activeTier(state.product, totalQty());
+      var det2 = el('<details class="fdtf-tiers" open></details>');
+      det2.appendChild(el('<summary>\ud83d\udcb6 ' + t("tiers_h", "Escal\u00f5es por quantidade (pre\u00e7o/un., sem IVA)") + '</summary>'));
+      var _tt = '<table><thead><tr><th>' + t("qtty", "Quantidade") + '</th><th>' + t("unit", "Pre\u00e7o unit\u00e1rio") + '</th></tr></thead><tbody>';
+      _tiers.forEach(function (tr) {
+        var on = (_at && _at.min === tr.min && _at.max === tr.max) ? ' class="on"' : '';
+        _tt += '<tr data-min="' + tr.min + '" data-max="' + tr.max + '"' + on + '><td>' + esc(tierRange(tr)) + '</td><td>' + money(tr.price) + '</td></tr>';
+      });
+      _tt += '</tbody></table>';
+      det2.appendChild(el(_tt));
+      p.appendChild(det2);
     }
 
     p.appendChild(el('<p class="fdtf-note">' + t("size_note", "Total mínimo de 1 unidade para avançar.") + '</p>'));
@@ -441,6 +477,19 @@
   }
   function scrollTop() { try { root.scrollIntoView({ behavior: "smooth", block: "start" }); } catch (e) {} }
 
+  // Refresh the active-tier highlight in the escalões table without a full re-render.
+  function updateTierHighlight() {
+    if (!root) return;
+    var at = activeTier(state.product, totalQty());
+    var rows = root.querySelectorAll('.fdtf-tiers tbody tr');
+    rows.forEach(function (tr) {
+      var mn = parseInt(tr.getAttribute('data-min'), 10);
+      var mx = parseInt(tr.getAttribute('data-max'), 10);
+      var isOn = at && at.min === mn && at.max === mx;
+      tr.classList.toggle('on', !!isOn);
+    });
+  }
+
   // summary sidebar
   function renderSummary() {
     var pr = pricing();
@@ -449,7 +498,8 @@
     summaryHost.appendChild(el('<div class="fdtf-sum-prod"><div class="mini">' + teeSVG(state.color ? state.color.hex : "#ffffff") + '</div>' +
       '<div><div class="nm">' + esc(state.product ? state.product.name : "—") + '</div>' +
       '<div class="meta">' + esc(state.color ? state.color.name : "") + (pr.q ? " · " + pr.q + " un." : "") + '</div></div></div>'));
-    summaryHost.appendChild(el('<div class="fdtf-row"><span>' + t("unit", "Preço unitário") + '</span><b>' + money(pr.base) + '</b></div>'));
+    var _unitLbl = t("unit", "Pre\u00e7o unit\u00e1rio") + (pr.tier ? ' <small>(' + esc(tierRange(pr.tier)) + ')</small>' : '');
+    summaryHost.appendChild(el('<div class="fdtf-row"><span>' + _unitLbl + '</span><b>' + money(pr.base) + '</b></div>'));
     activePositions().forEach(function (p2) {
       var st = state.pos[p2.code];
       summaryHost.appendChild(el('<div class="fdtf-row sub"><span>+ ' + esc(p2.label) + ' · ' + esc(st.size) + '</span><b>' + money(sizePrice(st.size)) + '</b></div>'));

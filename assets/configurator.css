@@ -134,6 +134,19 @@
 .fdtf-measures td:first-child{font-weight:700;color:var(--fdtf-navy)}
 .fdtf-measures tbody tr:nth-child(even){background:#f5f7fc}
 
+/* ---------- Quantity tiers (escalões) ---------- */
+.fdtf-tiers{margin-top:14px;border:1px solid var(--fdtf-line);border-radius:12px;background:#fbfcff;overflow:hidden}
+.fdtf-tiers summary{cursor:pointer;padding:12px 16px;font-weight:600;font-size:14px;color:var(--fdtf-navy);list-style:none}
+.fdtf-tiers summary::-webkit-details-marker{display:none}
+.fdtf-tiers summary:after{content:"▾";float:right;color:var(--fdtf-muted)}
+.fdtf-tiers[open] summary:after{content:"▴"}
+.fdtf-tiers table{width:100%;border-collapse:collapse;font-size:13.5px}
+.fdtf-tiers th,.fdtf-tiers td{text-align:left;padding:9px 16px;border-top:1px solid var(--fdtf-line)}
+.fdtf-tiers th{color:var(--fdtf-muted);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.03em}
+.fdtf-tiers td:last-child{text-align:right;font-weight:700;color:var(--fdtf-navy)}
+.fdtf-tiers tbody tr.on{background:#eef0ff}
+.fdtf-tiers tbody tr.on td{color:var(--fdtf-purple);font-weight:700}
+
 /* ---------- Preview + upload ---------- */
 .fdtf-perso{display:grid;grid-template-columns:1fr 340px;gap:24px;align-items:start}
 .fdtf-stages{display:flex;gap:14px;flex-wrap:wrap}

@@ -73,6 +73,16 @@ class FDTF_Plugin {
 			if ( empty( $pcolors ) ) {
 				$pcolors = $master_colors;
 			}
+			$ptiers = array();
+			if ( ! empty( $p['tiers'] ) && is_array( $p['tiers'] ) ) {
+				foreach ( $p['tiers'] as $t ) {
+					$ptiers[] = array(
+						'min'   => intval( $t['min'] ),
+						'max'   => intval( $t['max'] ),
+						'price' => floatval( $t['price'] ),
+					);
+				}
+			}
 			$products[] = array(
 				'id'       => $p['id'],
 				'name'     => $p['name'],
@@ -82,6 +92,7 @@ class FDTF_Plugin {
 				'desc'     => isset( $p['desc'] ) ? $p['desc'] : '',
 				'features' => isset( $p['features'] ) && is_array( $p['features'] ) ? array_values( $p['features'] ) : array(),
 				'colors'   => $pcolors,
+				'tiers'    => $ptiers,
 			);
 		}
 
