@@ -141,8 +141,9 @@ class FDTF_Cart {
 				}
 			}
 		}
-		if ( $total_qty < 1 ) {
-			wp_send_json_error( array( 'message' => 'Escolhe pelo menos 1 unidade.' ) );
+		$min_qty = isset( $s['min_qty'] ) ? max( 1, intval( $s['min_qty'] ) ) : 5;
+		if ( $total_qty < $min_qty ) {
+			wp_send_json_error( array( 'message' => 'Quantidade mínima de ' . $min_qty . ' unidades por encomenda.' ) );
 		}
 
 		// Trusted lookups for positions & print sizes.

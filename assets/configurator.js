@@ -11,6 +11,7 @@
   var VAT = (CFG.vat != null ? CFG.vat : 23) / 100;
   var CURR = CFG.currency || "€";
   var i18n = CFG.i18n || {};
+  var MINQ = (CFG.minQty != null ? CFG.minQty : 5); // minimum total units per order
 
   // Print positions (front / back / sleeves / chest) and print sizes (A7..A3).
   var POSITIONS = (CFG.positions && CFG.positions.length) ? CFG.positions : [
@@ -41,18 +42,18 @@
   // Print-zone geometry tuned for the real product PHOTOS, per mockup set.
   var ZONES_BY_SET = {
     cotton: {
-      frente:    { view: 'front', top: 24, cx: 50,   base: 33, ar: '1 / 1.35' },
-      peito_esq: { view: 'front', top: 27, cx: 37,   base: 10, ar: '1 / 1.15' },
-      manga_esq: { view: 'front', top: 22, cx: 15.5, base: 11, ar: '1 / 1.15' },
-      manga_dta: { view: 'front', top: 22, cx: 84.5, base: 11, ar: '1 / 1.15' },
-      costas:    { view: 'back',  top: 20, cx: 50,   base: 34, ar: '1 / 1.35' }
+      frente:    { view: 'front', top: 24, cx: 50,   base: 38, ar: '1 / 1.35' },
+      peito_esq: { view: 'front', top: 26, cx: 63,   base: 14, ar: '1 / 1.15' },
+      manga_esq: { view: 'front', top: 22, cx: 15,   base: 14, ar: '1 / 1.15' },
+      manga_dta: { view: 'front', top: 22, cx: 85,   base: 14, ar: '1 / 1.15' },
+      costas:    { view: 'back',  top: 20, cx: 50,   base: 38, ar: '1 / 1.35' }
     },
     sport: {
-      frente:    { view: 'front', top: 25, cx: 50, base: 29, ar: '1 / 1.35' },
-      peito_esq: { view: 'front', top: 28, cx: 39, base: 9,  ar: '1 / 1.15' },
-      manga_esq: { view: 'front', top: 25, cx: 17, base: 9,  ar: '1 / 1.15' },
-      manga_dta: { view: 'front', top: 25, cx: 83, base: 9,  ar: '1 / 1.15' },
-      costas:    { view: 'back',  top: 21, cx: 50, base: 30, ar: '1 / 1.35' }
+      frente:    { view: 'front', top: 25, cx: 50, base: 34, ar: '1 / 1.35' },
+      peito_esq: { view: 'front', top: 27, cx: 61, base: 13, ar: '1 / 1.15' },
+      manga_esq: { view: 'front', top: 25, cx: 16, base: 13, ar: '1 / 1.15' },
+      manga_dta: { view: 'front', top: 25, cx: 84, base: 13, ar: '1 / 1.15' },
+      costas:    { view: 'back',  top: 21, cx: 50, base: 34, ar: '1 / 1.35' }
     }
   };
   function zoneSetFor(prod) {
@@ -290,7 +291,7 @@
       p.appendChild(det2);
     }
 
-    p.appendChild(el('<p class="fdtf-note">' + t("size_note", "Total mínimo de 1 unidade para avançar.") + '</p>'));
+    p.appendChild(el('<p class="fdtf-note">' + t("size_note", "Quantidade mínima de " + MINQ + " unidades por encomenda.") + '</p>'));
     return p;
   }
 
@@ -505,7 +506,7 @@
 
   function validate() {
     if (state.step === 0 && (!state.product || !state.color)) { alert(t("v_model", "Escolhe um modelo e uma cor.")); return false; }
-    if (state.step === 1 && totalQty() < 1) { alert(t("v_size", "Escolhe pelo menos 1 unidade.")); return false; }
+    if (state.step === 1 && totalQty() < MINQ) { alert(t("v_size", "Quantidade mínima de " + MINQ + " unidades por encomenda.")); return false; }
     return true;
   }
   function scrollTop() { try { root.scrollIntoView({ behavior: "smooth", block: "start" }); } catch (e) {} }
@@ -557,7 +558,7 @@
 
   // add to cart
   function addToCart() {
-    if (totalQty() < 1) { alert(t("v_size", "Escolhe pelo menos 1 unidade.")); return; }
+    if (totalQty() < MINQ) { alert(t("v_size", "Quantidade mínima de " + MINQ + " unidades por encomenda.")); return; }
     var act = activePositions();
     var payload = {
       product: state.product ? state.product.id : null,

@@ -165,6 +165,7 @@ class FDTF_Plugin {
 		return array(
 			'currency'     => $s['currency'],
 			'vat'          => floatval( $s['vat'] ),
+			'minQty'       => isset( $s['min_qty'] ) ? intval( $s['min_qty'] ) : 5,
 			'printPrice'   => floatval( $s['print_price'] ),
 			'maxMB'        => intval( $s['max_mb'] ),
 			'accept'       => $s['accept'],

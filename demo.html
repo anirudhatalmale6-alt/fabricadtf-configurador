@@ -35,6 +35,7 @@ body{margin:0;background:#f5f7fc}
 window.FDTF_CONFIG = {
   currency: "€",
   vat: 23,
+  minQty: 5,
   printPrice: 2.50,
   maxMB: 25,
   accept: ".png,.pdf",
@@ -43,7 +44,7 @@ window.FDTF_CONFIG = {
     { id: "classic", name: "T-shirt 150gr", price: 6.95, badge: "Mais escolhida", badgeHot: true, mockupSet: "cotton",
       desc: "T-shirt de adulto de manga curta, 100% algodão em malha lisa 150 g/m²",
       features: ["100% algodão", "Malha lisa 150 g/m²", "Single Jersey"],
-      tiers: [ { min: 1, max: 9, price: 6.95 }, { min: 10, max: 49, price: 2.55 }, { min: 50, max: 99, price: 2.45 }, { min: 100, max: 249, price: 2.40 }, { min: 250, max: 499, price: 2.15 }, { min: 500, max: 999, price: 1.95 }, { min: 1000, max: 0, price: 1.85 } ],
+      tiers: [ { min: 5, max: 9, price: 6.95 }, { min: 10, max: 49, price: 2.55 }, { min: 50, max: 99, price: 2.45 }, { min: 100, max: 249, price: 2.40 }, { min: 250, max: 499, price: 2.15 }, { min: 500, max: 999, price: 1.95 }, { min: 1000, max: 0, price: 1.85 } ],
       colors: [
         { name: "Branco", hex: "#ffffff", front: "assets/mockups/cotton/wh_front.jpg", back: "assets/mockups/cotton/wh_back.jpg" },
         { name: "Preto", hex: "#1a1a1a", front: "assets/mockups/cotton/bk_front.jpg", back: "assets/mockups/cotton/bk_back.jpg" },
@@ -60,7 +61,7 @@ window.FDTF_CONFIG = {
     { id: "premium", name: "T-shirt 190gr", price: 8.95, badge: "Qualidade superior", mockupSet: "cotton",
       desc: "T-shirt de adulto de manga curta, 100% algodão penteado 190 g/m²",
       features: ["100% algodão penteado", "Malha 190 g/m²", "Toque mais encorpado"],
-      tiers: [ { min: 1, max: 9, price: 8.95 }, { min: 10, max: 49, price: 3.85 }, { min: 50, max: 99, price: 3.40 }, { min: 100, max: 249, price: 3.05 }, { min: 250, max: 499, price: 2.85 }, { min: 500, max: 999, price: 2.75 }, { min: 1000, max: 0, price: 2.65 } ],
+      tiers: [ { min: 5, max: 9, price: 8.95 }, { min: 10, max: 49, price: 3.85 }, { min: 50, max: 99, price: 3.40 }, { min: 100, max: 249, price: 3.05 }, { min: 250, max: 499, price: 2.85 }, { min: 500, max: 999, price: 2.75 }, { min: 1000, max: 0, price: 2.65 } ],
       colors: [
         { name: "Branco", hex: "#ffffff", front: "assets/mockups/cotton/wh_front.jpg", back: "assets/mockups/cotton/wh_back.jpg" },
         { name: "Preto", hex: "#1a1a1a", front: "assets/mockups/cotton/bk_front.jpg", back: "assets/mockups/cotton/bk_back.jpg" },
@@ -77,7 +78,7 @@ window.FDTF_CONFIG = {
     { id: "sport",   name: "T-shirt Técnica 135gr", price: 6.95, badge: "Ideal para desporto", mockupSet: "sport",
       desc: "T-shirt técnica de manga curta, poliéster respirável 135 g/m²",
       features: ["100% poliéster", "Respirável / dry-fit", "Leve 135 g/m²"],
-      tiers: [ { min: 1, max: 9, price: 6.95 }, { min: 10, max: 49, price: 2.55 }, { min: 50, max: 99, price: 2.45 }, { min: 100, max: 249, price: 2.40 }, { min: 250, max: 499, price: 2.13 }, { min: 500, max: 999, price: 1.95 }, { min: 1000, max: 0, price: 1.85 } ],
+      tiers: [ { min: 5, max: 9, price: 6.95 }, { min: 10, max: 49, price: 2.55 }, { min: 50, max: 99, price: 2.45 }, { min: 100, max: 249, price: 2.40 }, { min: 250, max: 499, price: 2.13 }, { min: 500, max: 999, price: 1.95 }, { min: 1000, max: 0, price: 1.85 } ],
       colors: [
         { name: "Branco", hex: "#ffffff", front: "assets/mockups/sport/wh_front.jpg", back: "assets/mockups/sport/wh_back.jpg" },
         { name: "Preto", hex: "#1a1a1a", front: "assets/mockups/sport/bk_front.jpg", back: "assets/mockups/sport/bk_back.jpg" },

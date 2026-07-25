@@ -23,6 +23,7 @@ class FDTF_Settings {
 		return array(
 			'currency'    => get_woocommerce_currency_symbol() ? get_woocommerce_currency_symbol() : '€',
 			'vat'         => 23,
+			'min_qty'     => 5,
 			'print_price' => 2.50,
 			'max_mb'      => 25,
 			'accept'      => '.png,.pdf',
@@ -33,7 +34,7 @@ class FDTF_Settings {
 						'features' => array( '100% algodão', 'Malha lisa 150 g/m²', 'Single Jersey' ),
 						'color_names' => array( 'Branco', 'Preto', 'Cinza', 'Vermelho', 'Laranja', 'Amarelo', 'Azul Navy', 'Azul Royal', 'Azul claro', 'Verde', 'Verde escuro' ),
 						'tiers' => array(
-							array( 'min' => 1, 'max' => 9, 'price' => 6.95 ),
+							array( 'min' => 5, 'max' => 9, 'price' => 6.95 ),
 							array( 'min' => 10, 'max' => 49, 'price' => 2.55 ),
 							array( 'min' => 50, 'max' => 99, 'price' => 2.45 ),
 							array( 'min' => 100, 'max' => 249, 'price' => 2.40 ),
@@ -46,7 +47,7 @@ class FDTF_Settings {
 						'features' => array( '100% algodão penteado', 'Malha 190 g/m²', 'Toque mais encorpado' ),
 						'color_names' => array( 'Branco', 'Preto', 'Cinza', 'Vermelho', 'Laranja', 'Amarelo', 'Azul Navy', 'Azul Royal', 'Azul claro', 'Verde', 'Verde escuro' ),
 						'tiers' => array(
-							array( 'min' => 1, 'max' => 9, 'price' => 8.95 ),
+							array( 'min' => 5, 'max' => 9, 'price' => 8.95 ),
 							array( 'min' => 10, 'max' => 49, 'price' => 3.85 ),
 							array( 'min' => 50, 'max' => 99, 'price' => 3.40 ),
 							array( 'min' => 100, 'max' => 249, 'price' => 3.05 ),
@@ -59,7 +60,7 @@ class FDTF_Settings {
 						'features' => array( '100% poliéster', 'Respirável / dry-fit', 'Leve 135 g/m²' ),
 						'color_names' => array( 'Branco', 'Preto', 'Vermelho', 'Laranja florescente', 'Amarelo florescente', 'Azul Navy', 'Azul Royal', 'Verde florescente', 'Verde kelly' ),
 						'tiers' => array(
-							array( 'min' => 1, 'max' => 9, 'price' => 6.95 ),
+							array( 'min' => 5, 'max' => 9, 'price' => 6.95 ),
 							array( 'min' => 10, 'max' => 49, 'price' => 2.55 ),
 							array( 'min' => 50, 'max' => 99, 'price' => 2.45 ),
 							array( 'min' => 100, 'max' => 249, 'price' => 2.40 ),
@@ -182,6 +183,7 @@ class FDTF_Settings {
 
 		$out['currency']     = isset( $in['currency'] ) ? sanitize_text_field( $in['currency'] ) : '€';
 		$out['vat']          = isset( $in['vat'] ) ? floatval( $in['vat'] ) : 23;
+		$out['min_qty']      = isset( $in['min_qty'] ) ? max( 1, intval( $in['min_qty'] ) ) : 5;
 		$out['print_price']  = isset( $in['print_price'] ) ? round( floatval( $in['print_price'] ), 2 ) : 0;
 		$out['max_mb']       = isset( $in['max_mb'] ) ? max( 1, intval( $in['max_mb'] ) ) : 25;
 		$out['accept']       = isset( $in['accept'] ) ? sanitize_text_field( $in['accept'] ) : '.png,.pdf';
@@ -422,6 +424,10 @@ class FDTF_Settings {
 					<tr>
 						<th><label>IVA (%)</label></th>
 						<td><input type="number" step="0.01" name="vat" value="<?php echo esc_attr( $s['vat'] ); ?>" class="small-text"> <span class="description">Ex.: 23</span></td>
+					</tr>
+					<tr>
+						<th><label>Quantidade mínima por encomenda</label></th>
+						<td><input type="number" min="1" name="min_qty" value="<?php echo esc_attr( isset( $s['min_qty'] ) ? $s['min_qty'] : 5 ); ?>" class="small-text"> <span class="description">Total de t-shirts mínimo para avançar.</span></td>
 					</tr>
 					<tr>
 						<th><label>Preço da personalização / unidade</label></th>
