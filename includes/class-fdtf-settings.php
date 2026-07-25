@@ -28,7 +28,7 @@ class FDTF_Settings {
 			'accept'      => '.png,.pdf',
 			'accept_label'=> 'PNG ou PDF · máx 25 MB',
 			'products'    => array(
-					array( 'id' => 'classic', 'name' => 'T-shirt 150gr', 'price' => 6.95, 'badge' => 'Mais escolhida', 'badge_hot' => 1,
+					array( 'id' => 'classic', 'name' => 'T-shirt 150gr', 'price' => 6.95, 'mockup' => 'cotton', 'badge' => 'Mais escolhida', 'badge_hot' => 1,
 						'desc' => 'T-shirt de adulto de manga curta, 100% algodão em malha lisa 150 g/m²',
 						'features' => array( '100% algodão', 'Malha lisa 150 g/m²', 'Single Jersey' ),
 						'color_names' => array( 'Branco', 'Preto', 'Cinza', 'Vermelho', 'Laranja', 'Amarelo', 'Azul Navy', 'Azul Royal', 'Azul claro', 'Verde', 'Verde escuro' ),
@@ -41,7 +41,7 @@ class FDTF_Settings {
 							array( 'min' => 500, 'max' => 999, 'price' => 1.95 ),
 							array( 'min' => 1000, 'max' => 0, 'price' => 1.85 ),
 						) ),
-					array( 'id' => 'premium', 'name' => 'T-shirt 190gr', 'price' => 8.95, 'badge' => 'Qualidade superior', 'badge_hot' => 0,
+					array( 'id' => 'premium', 'name' => 'T-shirt 190gr', 'price' => 8.95, 'mockup' => 'cotton', 'badge' => 'Qualidade superior', 'badge_hot' => 0,
 						'desc' => 'T-shirt de adulto de manga curta, 100% algodão penteado 190 g/m²',
 						'features' => array( '100% algodão penteado', 'Malha 190 g/m²', 'Toque mais encorpado' ),
 						'color_names' => array( 'Branco', 'Preto', 'Cinza', 'Vermelho', 'Laranja', 'Amarelo', 'Azul Navy', 'Azul Royal', 'Azul claro', 'Verde', 'Verde escuro' ),
@@ -54,7 +54,7 @@ class FDTF_Settings {
 							array( 'min' => 500, 'max' => 999, 'price' => 2.75 ),
 							array( 'min' => 1000, 'max' => 0, 'price' => 2.65 ),
 						) ),
-					array( 'id' => 'sport',   'name' => 'T-shirt Técnica 135gr', 'price' => 6.95, 'badge' => 'Ideal para desporto', 'badge_hot' => 0,
+					array( 'id' => 'sport',   'name' => 'T-shirt Técnica 135gr', 'price' => 6.95, 'mockup' => 'sport', 'badge' => 'Ideal para desporto', 'badge_hot' => 0,
 						'desc' => 'T-shirt técnica de manga curta, poliéster respirável 135 g/m²',
 						'features' => array( '100% poliéster', 'Respirável / dry-fit', 'Leve 135 g/m²' ),
 						'color_names' => array( 'Branco', 'Preto', 'Vermelho', 'Laranja florescente', 'Amarelo florescente', 'Azul Navy', 'Azul Royal', 'Verde florescente', 'Verde kelly' ),
@@ -233,6 +233,7 @@ class FDTF_Settings {
 					'desc'      => isset( $in['product_desc'][ $i ] ) ? sanitize_text_field( $in['product_desc'][ $i ] ) : '',
 					'features'  => $features,
 						'color_names' => $color_names,
+						'mockup'      => isset( $in['product_mockup'][ $i ] ) ? sanitize_key( $in['product_mockup'][ $i ] ) : '',
 						'tiers'       => $tiers,
 				);
 			}
@@ -447,7 +448,7 @@ class FDTF_Settings {
 					<tbody>
 					<?php foreach ( $s['products'] as $p ) : ?>
 						<tr>
-							<td><input type="text" name="product_id[]" value="<?php echo esc_attr( $p['id'] ); ?>" placeholder="auto" style="width:80px"></td>
+							<td><input type="text" name="product_id[]" value="<?php echo esc_attr( $p['id'] ); ?>" placeholder="auto" style="width:80px"><input type="hidden" name="product_mockup[]" value="<?php echo esc_attr( isset( $p['mockup'] ) ? $p['mockup'] : '' ); ?>"></td>
 							<td><input type="text" name="product_name[]" value="<?php echo esc_attr( $p['name'] ); ?>"></td>
 							<td><input type="number" step="0.01" name="product_price[]" value="<?php echo esc_attr( $p['price'] ); ?>" class="small-text"></td>
 							<td><input type="text" name="product_badge[]" value="<?php echo esc_attr( $p['badge'] ); ?>" style="width:110px"></td>
@@ -607,7 +608,7 @@ class FDTF_Settings {
 				var tb = prodTable.querySelector( 'tbody' );
 				var tr = document.createElement( 'tr' );
 				tr.innerHTML =
-					'<td><input type="text" name="product_id[]" placeholder="auto" style="width:80px"></td>' +
+					'<td><input type="text" name="product_id[]" placeholder="auto" style="width:80px"><input type="hidden" name="product_mockup[]" value=""></td>' +
 					'<td><input type="text" name="product_name[]"></td>' +
 					'<td><input type="number" step="0.01" name="product_price[]" class="small-text"></td>' +
 					'<td><input type="text" name="product_badge[]" style="width:110px"></td>' +

@@ -38,6 +38,35 @@
     costas:    { view: "back",  top: 24, cx: 50,   base: 44, ar: "1 / 1.32" }
   };
   var SIZE_FRAC = { A7: 0.5, A6: 0.62, A5: 0.75, A4: 0.88, A3: 1.0 };
+  // Print-zone geometry tuned for the real product PHOTOS, per mockup set.
+  var ZONES_BY_SET = {
+    cotton: {
+      frente:    { view: 'front', top: 24, cx: 50,   base: 33, ar: '1 / 1.35' },
+      peito_esq: { view: 'front', top: 27, cx: 37,   base: 10, ar: '1 / 1.15' },
+      manga_esq: { view: 'front', top: 22, cx: 15.5, base: 11, ar: '1 / 1.15' },
+      manga_dta: { view: 'front', top: 22, cx: 84.5, base: 11, ar: '1 / 1.15' },
+      costas:    { view: 'back',  top: 20, cx: 50,   base: 34, ar: '1 / 1.35' }
+    },
+    sport: {
+      frente:    { view: 'front', top: 25, cx: 50, base: 29, ar: '1 / 1.35' },
+      peito_esq: { view: 'front', top: 28, cx: 39, base: 9,  ar: '1 / 1.15' },
+      manga_esq: { view: 'front', top: 25, cx: 17, base: 9,  ar: '1 / 1.15' },
+      manga_dta: { view: 'front', top: 25, cx: 83, base: 9,  ar: '1 / 1.15' },
+      costas:    { view: 'back',  top: 21, cx: 50, base: 30, ar: '1 / 1.35' }
+    }
+  };
+  function zoneSetFor(prod) {
+    var set = prod && prod.mockupSet;
+    if (set && ZONES_BY_SET[set]) return ZONES_BY_SET[set];
+    return null;
+  }
+  function colorImg(view) { var c = state.color; return (c && c[view]) ? c[view] : null; }
+  function repImg(prod) {
+    var cols = colorsFor(prod), i;
+    for (i = 0; i < cols.length; i++) { if (cols[i].front && /branco|white/i.test(cols[i].name)) return cols[i].front; }
+    for (i = 0; i < cols.length; i++) { if (cols[i].front) return cols[i].front; }
+    return null;
+  }
 
   function t(k, d) { return i18n[k] || d; }
   function r2(v) { return Math.round((Number(v) || 0) * 100) / 100; }
@@ -179,7 +208,7 @@
       c.innerHTML =
         '<div class="tick">✓</div>' +
         (prod.badge ? '<span class="fdtf-badge ' + (prod.badgeHot ? "hot" : "") + '">' + esc(prod.badge) + '</span>' : '') +
-        '<div class="thumb">' + teeSVG(state.color ? state.color.hex : "#ffffff") + '</div>' +
+        '<div class="thumb">' + (repImg(prod) ? '<img class="fdtf-tee-img" src="' + repImg(prod) + '" alt="">' : teeSVG(state.color ? state.color.hex : "#ffffff")) + '</div>' +
         '<h3>' + esc(prod.name) + '</h3>' +
         (prod.desc ? '<p class="fdtf-desc">' + esc(prod.desc) + '</p>' : '') +
         feats +
@@ -268,9 +297,13 @@
   // ---- preview stages ----
   function buildStage(view, label) {
     var stage = el('<div class="fdtf-stage"><span class="fdtf-view-tag">' + label + '</span></div>');
-    var mock = el('<div class="fdtf-mock">' + teeSVG(state.color ? state.color.hex : "#ffffff", view === "back") + '</div>');
+    var img = colorImg(view);
+    var mock = el('<div class="fdtf-mock"></div>');
+    if (img) { mock.appendChild(el('<img class="fdtf-tee-img" src="' + img + '" alt="">')); }
+    else { mock.innerHTML = teeSVG(state.color ? state.color.hex : "#ffffff", view === "back"); }
+    var zones = zoneSetFor(state.product) || ZONES;
     POSITIONS.forEach(function (p) {
-      var z = ZONES[p.code];
+      var z = zones[p.code];
       if (!z || z.view !== view) return;
       var st = state.pos[p.code];
       var frac = SIZE_FRAC[st.size] != null ? SIZE_FRAC[st.size] : 0.8;
@@ -495,7 +528,7 @@
     var pr = pricing();
     summaryHost.innerHTML = "";
     summaryHost.appendChild(el('<h3>' + t("budget", "Resumo do orçamento") + '</h3>'));
-    summaryHost.appendChild(el('<div class="fdtf-sum-prod"><div class="mini">' + teeSVG(state.color ? state.color.hex : "#ffffff") + '</div>' +
+    summaryHost.appendChild(el('<div class="fdtf-sum-prod"><div class="mini">' + (colorImg('front') ? '<img class="fdtf-tee-img" src="' + colorImg('front') + '" alt="">' : teeSVG(state.color ? state.color.hex : "#ffffff")) + '</div>' +
       '<div><div class="nm">' + esc(state.product ? state.product.name : "—") + '</div>' +
       '<div class="meta">' + esc(state.color ? state.color.name : "") + (pr.q ? " · " + pr.q + " un." : "") + '</div></div></div>'));
     var _unitLbl = t("unit", "Pre\u00e7o unit\u00e1rio") + (pr.tier ? ' <small>(' + esc(tierRange(pr.tier)) + ')</small>' : '');

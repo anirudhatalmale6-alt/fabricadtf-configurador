@@ -61,13 +61,27 @@ class FDTF_Plugin {
 			$color_by_name[ strtolower( trim( $mc['name'] ) ) ] = array( 'name' => $mc['name'], 'hex' => $mc['hex'] );
 		}
 
+		// Mockup photo sets: colour-name -> file code, per product mockup set.
+		$mock_map = array(
+			'cotton' => array( 'branco' => 'wh', 'preto' => 'bk', 'cinza' => 'as', 'vermelho' => 'rd', 'laranja' => 'or', 'amarelo' => 'sy', 'azul navy' => 'ny', 'azul royal' => 'rb', 'azul claro' => 'sk', 'verde' => 'lm', 'verde escuro' => 'bg' ),
+			'sport'  => array( 'branco' => 'wh', 'preto' => 'bk', 'vermelho' => 'rd', 'laranja florescente' => 'orf', 'amarelo florescente' => 'syf', 'azul navy' => 'ny', 'azul royal' => 'rb', 'verde florescente' => 'gf', 'verde kelly' => 'lmf' ),
+		);
+		$mock_url = FDTF_URL . 'assets/mockups/';
+
 		$products = array();
 		foreach ( $s['products'] as $p ) {
+			$set  = isset( $p['mockup'] ) ? $p['mockup'] : '';
+			$cmap = ( $set && isset( $mock_map[ $set ] ) ) ? $mock_map[ $set ] : array();
 			$pcolors = array();
 			if ( ! empty( $p['color_names'] ) && is_array( $p['color_names'] ) ) {
 				foreach ( $p['color_names'] as $cn ) {
 					$k = strtolower( trim( $cn ) );
-					$pcolors[] = isset( $color_by_name[ $k ] ) ? $color_by_name[ $k ] : array( 'name' => $cn, 'hex' => '#cccccc' );
+					$entry = isset( $color_by_name[ $k ] ) ? $color_by_name[ $k ] : array( 'name' => $cn, 'hex' => '#cccccc' );
+					if ( isset( $cmap[ $k ] ) ) {
+						$entry['front'] = $mock_url . $set . '/' . $cmap[ $k ] . '_front.jpg';
+						$entry['back']  = $mock_url . $set . '/' . $cmap[ $k ] . '_back.jpg';
+					}
+					$pcolors[] = $entry;
 				}
 			}
 			if ( empty( $pcolors ) ) {
@@ -93,6 +107,7 @@ class FDTF_Plugin {
 				'features' => isset( $p['features'] ) && is_array( $p['features'] ) ? array_values( $p['features'] ) : array(),
 				'colors'   => $pcolors,
 				'tiers'    => $ptiers,
+				'mockupSet' => $set,
 			);
 		}
 
