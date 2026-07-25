@@ -202,6 +202,8 @@
     products.forEach(function (prod) {
       var sel = state.product && state.product.id === prod.id;
       var c = el('<div class="fdtf-prod' + (sel ? " sel" : "") + '"></div>');
+      // Selected model shows the chosen colour's photo live; others show a representative one.
+      var thumbSrc = (sel && colorImg('front')) ? colorImg('front') : repImg(prod);
       var feats = "";
       if (prod.features && prod.features.length) {
         feats = '<ul class="fdtf-feat">' + prod.features.map(function (f) { return '<li>' + esc(f) + '</li>'; }).join("") + '</ul>';
@@ -209,7 +211,7 @@
       c.innerHTML =
         '<div class="tick">✓</div>' +
         (prod.badge ? '<span class="fdtf-badge ' + (prod.badgeHot ? "hot" : "") + '">' + esc(prod.badge) + '</span>' : '') +
-        '<div class="thumb">' + (repImg(prod) ? '<img class="fdtf-tee-img" src="' + repImg(prod) + '" alt="">' : teeSVG(state.color ? state.color.hex : "#ffffff")) + '</div>' +
+        '<div class="thumb">' + (thumbSrc ? '<img class="fdtf-tee-img" src="' + thumbSrc + '" alt="">' : teeSVG(state.color ? state.color.hex : "#ffffff")) + '</div>' +
         '<h3>' + esc(prod.name) + '</h3>' +
         (prod.desc ? '<p class="fdtf-desc">' + esc(prod.desc) + '</p>' : '') +
         feats +
