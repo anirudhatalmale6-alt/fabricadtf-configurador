@@ -30,15 +30,17 @@ class FDTF_Settings {
 			'products'    => array(
 				array( 'id' => 'classic', 'name' => 'T-shirt Classic 160g', 'price' => 7.00, 'badge' => 'Mais escolhida', 'badge_hot' => 1,
 					'desc' => 'T-shirt de adulto de manga curta, 100% algodão em malha lisa 160 g/m²',
-					'features' => array( '100% algodão', 'Malha lisa 160 g/m²', 'Single Jersey' ) ),
+					'features' => array( '100% algodão', 'Malha lisa 160 g/m²', 'Single Jersey' ),
+						'color_names' => array() ),
 				array( 'id' => 'premium', 'name' => 'T-shirt Premium 190g', 'price' => 9.50, 'badge' => 'Qualidade superior', 'badge_hot' => 0,
 					'desc' => 'T-shirt de adulto de manga curta, 100% algodão penteado 190 g/m²',
-					'features' => array( '100% algodão penteado', 'Malha 190 g/m²', 'Toque mais encorpado' ) ),
+					'features' => array( '100% algodão penteado', 'Malha 190 g/m²', 'Toque mais encorpado' ),
+						'color_names' => array() ),
 				array( 'id' => 'sport',   'name' => 'T-shirt Sport 135g',   'price' => 8.00, 'badge' => 'Ideal para desporto', 'badge_hot' => 0,
 					'desc' => 'T-shirt técnica de manga curta, poliéster respirável 135 g/m²',
 					'features' => array( '100% poliéster', 'Respirável / dry-fit', 'Leve 135 g/m²' ) ),
 			),
-			'colors'      => array(
+			'colors'      => array( // Master palette; each product may use a subset via 'color_names' (empty = all).
 				array( 'name' => 'Branco', 'hex' => '#ffffff' ),
 				array( 'name' => 'Preto', 'hex' => '#1a1a1a' ),
 				array( 'name' => 'Cinza', 'hex' => '#9aa0aa' ),
@@ -157,7 +159,14 @@ class FDTF_Settings {
 						}
 					}
 				}
-				$products[] = array(
+				$color_names = array();
+					if ( isset( $in['product_colors'][ $i ] ) ) {
+						foreach ( preg_split( '/\r\n|\r|\n|,/', $in['product_colors'][ $i ] ) as $cn ) {
+							$cn = sanitize_text_field( trim( $cn ) );
+							if ( '' !== $cn ) { $color_names[] = $cn; }
+						}
+					}
+					$products[] = array(
 					'id'        => $id,
 					'name'      => $name,
 					'price'     => isset( $in['product_price'][ $i ] ) ? round( floatval( $in['product_price'][ $i ] ), 2 ) : 0,
@@ -165,6 +174,7 @@ class FDTF_Settings {
 					'badge_hot' => ! empty( $in['product_hot'][ $i ] ) ? 1 : 0,
 					'desc'      => isset( $in['product_desc'][ $i ] ) ? sanitize_text_field( $in['product_desc'][ $i ] ) : '',
 					'features'  => $features,
+						'color_names' => $color_names,
 				);
 			}
 		}
@@ -374,7 +384,7 @@ class FDTF_Settings {
 				<h2>Modelos de t-shirt</h2>
 				<p class="description">A descrição e as características (uma por linha) aparecem no cartão de cada modelo, como no exemplo (100% algodão, gramagem, Single Jersey, etc.).</p>
 				<table class="widefat striped" id="fdtf-products">
-					<thead><tr><th>ID</th><th>Nome</th><th>Preço/un.</th><th>Etiqueta</th><th style="text-align:center">Destaque</th><th>Descrição</th><th>Características (1 por linha)</th><th></th></tr></thead>
+					<thead><tr><th>ID</th><th>Nome</th><th>Preço/un.</th><th>Etiqueta</th><th style="text-align:center">Destaque</th><th>Descrição</th><th>Características (1 por linha)</th><th>Cores (uma por linha; vazio = todas)</th><th></th></tr></thead>
 					<tbody>
 					<?php foreach ( $s['products'] as $p ) : ?>
 						<tr>
@@ -385,6 +395,7 @@ class FDTF_Settings {
 							<td style="text-align:center"><input type="checkbox" name="product_hot[<?php /* index set via JS below */ ?>]" <?php checked( ! empty( $p['badge_hot'] ) ); ?>></td>
 							<td><textarea name="product_desc[]" rows="2" style="width:200px"><?php echo esc_textarea( isset( $p['desc'] ) ? $p['desc'] : '' ); ?></textarea></td>
 							<td><textarea name="product_features[]" rows="3" style="width:200px" placeholder="100% algodão&#10;Malha 160 g/m²&#10;Single Jersey"><?php echo esc_textarea( isset( $p['features'] ) && is_array( $p['features'] ) ? implode( "\n", $p['features'] ) : '' ); ?></textarea></td>
+							<td><textarea name="product_colors[]" rows="3" style="width:150px" placeholder="Branco&#10;Preto&#10;Cinza&#10;(vazio = todas)"><?php echo esc_textarea( isset( $p['color_names'] ) && is_array( $p['color_names'] ) ? implode( "\n", $p['color_names'] ) : '' ); ?></textarea></td>
 							<td><button type="button" class="button fdtf-rm">×</button></td>
 						</tr>
 					<?php endforeach; ?>
@@ -543,6 +554,7 @@ class FDTF_Settings {
 					'<td style="text-align:center"><input type="checkbox"></td>' +
 					'<td><textarea name="product_desc[]" rows="2" style="width:200px"></textarea></td>' +
 					'<td><textarea name="product_features[]" rows="3" style="width:200px"></textarea></td>' +
+						'<td><textarea name="product_colors[]" rows="3" style="width:150px" placeholder="vazio = todas"></textarea></td>' +
 					'<td><button type="button" class="button fdtf-rm">×</button></td>';
 				tb.appendChild( tr );
 				reindexHot( prodTable );

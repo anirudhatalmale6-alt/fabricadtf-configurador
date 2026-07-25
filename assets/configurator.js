@@ -48,12 +48,16 @@
     if (!pos.sizes || !pos.sizes.length) return PRINT_SIZES.slice();
     return PRINT_SIZES.filter(function (ps) { return pos.sizes.indexOf(ps.code) >= 0; });
   }
+  // Each product can have its own colour palette; fall back to the master list.
+  function colorsFor(prod) {
+    return (prod && prod.colors && prod.colors.length) ? prod.colors : colors;
+  }
 
   // ---- state ----
   var state = {
     step: 0,
     product: products[0] || null,
-    color: colors[0] || null,
+    color: colorsFor(products[0] || null)[0] || null,
     qty: {},               // size -> qty
     pos: {},               // code -> { size, artDataUrl, artName, rawFile }
     extras: {},            // extra code -> bool
@@ -160,14 +164,21 @@
         (prod.desc ? '<p class="fdtf-desc">' + esc(prod.desc) + '</p>' : '') +
         feats +
         '<div class="price">' + t("from", "desde") + ' <b>' + money(prod.price) + '</b> /un.</div>';
-      c.addEventListener("click", function () { state.product = prod; render(); });
+      c.addEventListener("click", function () {
+        state.product = prod;
+        var pc = colorsFor(prod);
+        if (!state.color || !pc.some(function (x) { return x.name === state.color.name; })) {
+          state.color = pc[0] || null;
+        }
+        render();
+      });
       grid.appendChild(c);
     });
     p.appendChild(grid);
 
     p.appendChild(el('<div class="fdtf-label">' + t("color", "Cor da t-shirt") + '</div>'));
     var cwrap = el('<div class="fdtf-colors"></div>');
-    colors.forEach(function (col) {
+    colorsFor(state.product).forEach(function (col) {
       var sel = state.color && state.color.name === col.name;
       var c = el('<div class="fdtf-color' + (sel ? " sel" : "") + '" title="' + esc(col.name) + '"><span class="swatch" style="background:' + col.hex + '"></span></div>');
       c.addEventListener("click", function () { state.color = col; render(); });

@@ -54,8 +54,25 @@ class FDTF_Plugin {
 	private function build_config() {
 		$s = FDTF_Settings::get();
 
+		// Master palette + name->colour lookup so each product can use a subset.
+		$master_colors = array_values( (array) $s['colors'] );
+		$color_by_name = array();
+		foreach ( $master_colors as $mc ) {
+			$color_by_name[ strtolower( trim( $mc['name'] ) ) ] = array( 'name' => $mc['name'], 'hex' => $mc['hex'] );
+		}
+
 		$products = array();
 		foreach ( $s['products'] as $p ) {
+			$pcolors = array();
+			if ( ! empty( $p['color_names'] ) && is_array( $p['color_names'] ) ) {
+				foreach ( $p['color_names'] as $cn ) {
+					$k = strtolower( trim( $cn ) );
+					$pcolors[] = isset( $color_by_name[ $k ] ) ? $color_by_name[ $k ] : array( 'name' => $cn, 'hex' => '#cccccc' );
+				}
+			}
+			if ( empty( $pcolors ) ) {
+				$pcolors = $master_colors;
+			}
 			$products[] = array(
 				'id'       => $p['id'],
 				'name'     => $p['name'],
@@ -64,6 +81,7 @@ class FDTF_Plugin {
 				'badgeHot' => ! empty( $p['badge_hot'] ),
 				'desc'     => isset( $p['desc'] ) ? $p['desc'] : '',
 				'features' => isset( $p['features'] ) && is_array( $p['features'] ) ? array_values( $p['features'] ) : array(),
+				'colors'   => $pcolors,
 			);
 		}
 

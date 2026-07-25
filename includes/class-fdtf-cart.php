@@ -110,6 +110,25 @@ class FDTF_Cart {
 		$color_name = isset( $data['color'] ) ? sanitize_text_field( $data['color'] ) : '';
 		$color_hex  = isset( $data['colorHex'] ) ? sanitize_hex_color( $data['colorHex'] ) : '';
 
+		// Validate the colour against the master palette and this product's allowed subset.
+		$master_map = array();
+		foreach ( (array) $s['colors'] as $mc ) {
+			$master_map[ strtolower( trim( $mc['name'] ) ) ] = $mc;
+		}
+		$allowed_colors = ( ! empty( $product['color_names'] ) && is_array( $product['color_names'] ) )
+			? array_map( function ( $n ) { return strtolower( trim( $n ) ); }, $product['color_names'] )
+			: array();
+		$ckey = strtolower( trim( $color_name ) );
+		if ( '' !== $ckey ) {
+			if ( ! empty( $allowed_colors ) && ! in_array( $ckey, $allowed_colors, true ) ) {
+				wp_send_json_error( array( 'message' => 'Cor não disponível para este modelo.' ) );
+			}
+			if ( isset( $master_map[ $ckey ] ) ) {
+				$color_name = $master_map[ $ckey ]['name'];
+				$color_hex  = $master_map[ $ckey ]['hex'];
+			}
+		}
+
 		// Sizes / quantities.
 		$sizes    = array();
 		$total_qty = 0;
