@@ -113,10 +113,13 @@
   display:flex;align-items:center;justify-content:center;
 }
 .fdtf-qty button:hover{background:#e6ecfb}
-.fdtf-qty input{
-  width:48px;text-align:center;border:none;border-left:1px solid var(--fdtf-line);border-right:1px solid var(--fdtf-line);
-  height:36px;font-weight:700;font-size:15px;color:var(--fdtf-ink);background:#fff;-moz-appearance:textfield;appearance:textfield;
+.fdtf-config .fdtf-qty input{
+  width:48px;min-width:0;text-align:center;border:none;border-left:1px solid var(--fdtf-line);border-right:1px solid var(--fdtf-line);
+  height:36px;min-height:0;line-height:36px;margin:0;padding:0 4px !important;
+  font-weight:700;font-size:15px;color:var(--fdtf-ink);background:#fff;border-radius:0;
+  -moz-appearance:textfield;appearance:textfield;box-shadow:none;
 }
+.fdtf-config .fdtf-qty input:focus{outline:none;box-shadow:none}
 .fdtf-qty input::-webkit-outer-spin-button,.fdtf-qty input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 
 /* Measurements table (collapsible) */
