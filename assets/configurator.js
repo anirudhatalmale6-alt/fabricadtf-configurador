@@ -667,16 +667,51 @@
       fd.append("nonce", CFG.nonce || "");
       fd.append("data", JSON.stringify(payload));
       act.forEach(function (p2) { var st = state.pos[p2.code]; if (st.rawFile) fd.append("art_" + p2.code, st.rawFile); });
-      fetch(CFG.ajaxUrl, { method: "POST", body: fd, credentials: "same-origin" })
-        .then(function (r) { return r.json(); })
-        .then(function (res) {
-          if (res && res.success && res.data && res.data.redirect) window.location = res.data.redirect;
-          else alert((res && res.data && res.data.message) || t("add_ok", "Adicionado ao carrinho!"));
-        })
-        .catch(function () { alert(t("add_err", "Ocorreu um erro. Tenta novamente.")); });
+      postToCart(fd, true);
     } else {
       alert(t("demo_add", "Demonstração: t-shirt configurada e pronta a adicionar ao carrinho!\n\n") + JSON.stringify(payload, null, 2));
     }
+  }
+
+  // Sends the add-to-cart request. If the server reports an expired nonce
+  // (page served from a stale full-page cache), fetch a fresh nonce and retry once.
+  function postToCart(fd, allowRetry) {
+    fetch(CFG.ajaxUrl, { method: "POST", body: fd, credentials: "same-origin" })
+      .then(function (r) { return r.json(); })
+      .then(function (res) {
+        if (res && res.success && res.data && res.data.redirect) { window.location = res.data.redirect; return; }
+        if (allowRetry && res && res.data && res.data.code === "bad_nonce") {
+          refreshNonce(function (ok) {
+            if (ok) { fd.set("nonce", CFG.nonce || ""); postToCart(fd, false); }
+            else alert(t("add_err", "Ocorreu um erro. Tenta novamente."));
+          });
+          return;
+        }
+        alert((res && res.data && res.data.message) || t("add_ok", "Adicionado ao carrinho!"));
+      })
+      .catch(function () {
+        if (allowRetry) {
+          refreshNonce(function (ok) {
+            if (ok) { fd.set("nonce", CFG.nonce || ""); postToCart(fd, false); }
+            else alert(t("add_err", "Ocorreu um erro. Tenta novamente."));
+          });
+        } else {
+          alert(t("add_err", "Ocorreu um erro. Tenta novamente."));
+        }
+      });
+  }
+
+  // Fetches a live security nonce from the uncached endpoint and updates CFG.nonce.
+  function refreshNonce(cb) {
+    if (!CFG.ajaxUrl) { if (cb) cb(false); return; }
+    var url = CFG.ajaxUrl + (CFG.ajaxUrl.indexOf("?") === -1 ? "?" : "&") + "action=fdtf_nonce";
+    fetch(url, { method: "GET", credentials: "same-origin", cache: "no-store" })
+      .then(function (r) { return r.json(); })
+      .then(function (res) {
+        if (res && res.success && res.data && res.data.nonce) { CFG.nonce = res.data.nonce; if (cb) cb(true); }
+        else if (cb) cb(false);
+      })
+      .catch(function () { if (cb) cb(false); });
   }
 
   // ---- boot ----
@@ -688,6 +723,8 @@
       '<div class="fdtf-grid"><div class="fdtf-main"></div><aside class="fdtf-summary"></aside></div></div>';
     viewHost = root.querySelector(".fdtf-main");
     summaryHost = root.querySelector(".fdtf-summary");
+    // Replace any stale cached-page nonce with a live one straight away.
+    refreshNonce();
     render();
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);

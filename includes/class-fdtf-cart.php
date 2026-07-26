@@ -21,6 +21,12 @@ class FDTF_Cart {
 		add_action( 'wp_ajax_fdtf_add_to_cart', array( $this, 'ajax_add_to_cart' ) );
 		add_action( 'wp_ajax_nopriv_fdtf_add_to_cart', array( $this, 'ajax_add_to_cart' ) );
 
+		// Serves a fresh security nonce. The configurator page can be served from a
+		// full-page cache (LiteSpeed) whose baked-in nonce has since expired; the
+		// front-end fetches a live nonce from this uncached endpoint on load.
+		add_action( 'wp_ajax_fdtf_nonce', array( $this, 'ajax_nonce' ) );
+		add_action( 'wp_ajax_nopriv_fdtf_nonce', array( $this, 'ajax_nonce' ) );
+
 		// Carry custom data through the cart.
 		add_filter( 'woocommerce_add_cart_item_data', array( $this, 'add_cart_item_data' ), 10, 3 );
 		add_filter( 'woocommerce_get_item_data', array( $this, 'display_cart_item_data' ), 10, 2 );
@@ -83,8 +89,24 @@ class FDTF_Cart {
 	 * AJAX: validate the configuration, compute the price server-side, store the
 	 * uploaded art, and add the item to the cart.
 	 */
+	/**
+	 * AJAX: return a fresh nonce (used to refresh a stale cached-page nonce).
+	 */
+	public function ajax_nonce() {
+		wp_send_json_success( array( 'nonce' => wp_create_nonce( 'fdtf_nonce' ) ) );
+	}
+
 	public function ajax_add_to_cart() {
-		check_ajax_referer( 'fdtf_nonce', 'nonce' );
+		// Verify without dying, so a stale nonce (expired cached-page nonce)
+		// returns a clean JSON error the front-end can detect and auto-retry.
+		if ( ! check_ajax_referer( 'fdtf_nonce', 'nonce', false ) ) {
+			wp_send_json_error(
+				array(
+					'code'    => 'bad_nonce',
+					'message' => 'Sessão expirada. Tente novamente.',
+				)
+			);
+		}
 
 		$s    = FDTF_Settings::get();
 		$data = isset( $_POST['data'] ) ? json_decode( wp_unslash( $_POST['data'] ), true ) : null;

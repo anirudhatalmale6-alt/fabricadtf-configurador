@@ -189,6 +189,16 @@ class FDTF_Plugin {
 	public function shortcode( $atts ) {
 		$this->enqueue_needed = true;
 
+		// The configurator carries a per-request security nonce, so this page must
+		// not be served from a full-page cache with a stale nonce. Ask page caches
+		// (LiteSpeed, WP Super Cache, W3TC…) to skip it.
+		if ( ! defined( 'DONOTCACHEPAGE' ) ) {
+			define( 'DONOTCACHEPAGE', true );
+		}
+		// LiteSpeed Cache uses its own control API (ignores DONOTCACHEPAGE / raw headers).
+		do_action( 'litespeed_control_set_nocache', 'FabricaDTF configurador (nonce por pedido)' );
+		add_filter( 'litespeed_control_cacheable', '__return_false', 99 );
+
 		wp_enqueue_style( 'fdtf-configurador' );
 		wp_enqueue_script( 'fdtf-configurador' );
 		wp_add_inline_script(
