@@ -31,6 +31,7 @@ class FDTF_Plugin {
 		$this->cart     = new FDTF_Cart();
 
 		add_shortcode( 'fabricadtf_configurador', array( $this, 'shortcode' ) );
+		add_shortcode( 'fabricadtf_dtf', array( $this, 'shortcode_dtf' ) );
 		add_action( 'wp_enqueue_scripts', array( $this, 'register_assets' ) );
 		// Load a translations file if present.
 		add_action( 'init', function () {
@@ -44,6 +45,73 @@ class FDTF_Plugin {
 	public function register_assets() {
 		wp_register_style( 'fdtf-configurador', FDTF_URL . 'assets/configurator.css', array(), FDTF_VERSION );
 		wp_register_script( 'fdtf-configurador', FDTF_URL . 'assets/configurator.js', array(), FDTF_VERSION, true );
+		wp_register_style( 'fdtf-dtf', FDTF_URL . 'assets/dtf.css', array(), FDTF_VERSION );
+		wp_register_script( 'fdtf-dtf', FDTF_URL . 'assets/dtf.js', array(), FDTF_VERSION, true );
+	}
+
+	/**
+	 * Build the front-end config for the DTF-a-metro ordering page.
+	 *
+	 * @return array
+	 */
+	private function build_dtf_config() {
+		$s   = FDTF_Settings::get();
+		$dtf = isset( $s['dtf'] ) && is_array( $s['dtf'] ) ? $s['dtf'] : array();
+
+		$tiers = array();
+		foreach ( (array) ( isset( $dtf['tiers'] ) ? $dtf['tiers'] : array() ) as $t ) {
+			$tiers[] = array(
+				'label' => isset( $t['label'] ) ? $t['label'] : '',
+				'min'   => intval( isset( $t['min'] ) ? $t['min'] : 1 ),
+				'max'   => intval( isset( $t['max'] ) ? $t['max'] : 0 ),
+				'price' => floatval( isset( $t['price'] ) ? $t['price'] : 0 ),
+			);
+		}
+
+		return array(
+			'ajaxUrl'      => admin_url( 'admin-ajax.php' ),
+			'nonce'        => wp_create_nonce( 'fdtf_nonce' ),
+			'currency'     => isset( $s['currency'] ) ? $s['currency'] : '€',
+			'title'        => isset( $dtf['title'] ) ? $dtf['title'] : 'DTF a Metro',
+			'badge'        => isset( $dtf['badge'] ) ? $dtf['badge'] : '',
+			'rating'       => isset( $dtf['rating'] ) ? floatval( $dtf['rating'] ) : 5,
+			'reviews'      => isset( $dtf['reviews'] ) ? intval( $dtf['reviews'] ) : 0,
+			'desc'         => isset( $dtf['desc'] ) ? $dtf['desc'] : '',
+			'unitLabel'    => isset( $dtf['unit_label'] ) ? $dtf['unit_label'] : '/metro',
+			'qtyLabel'     => isset( $dtf['qty_label'] ) ? $dtf['qty_label'] : 'Quantidade (metros lineares)',
+			'minM'         => isset( $dtf['min_m'] ) ? max( 1, intval( $dtf['min_m'] ) ) : 1,
+			'accept'       => isset( $dtf['accept'] ) ? $dtf['accept'] : '.png,.jpg,.jpeg,.pdf',
+			'acceptLabel'  => isset( $dtf['accept_label'] ) ? $dtf['accept_label'] : 'PNG, JPG, PDF',
+			'maxMB'        => isset( $dtf['max_mb'] ) ? intval( $dtf['max_mb'] ) : 40,
+			'tiers'        => $tiers,
+			'features'     => array_values( (array) ( isset( $dtf['features'] ) ? $dtf['features'] : array() ) ),
+			'guidelines'   => array_values( (array) ( isset( $dtf['guidelines'] ) ? $dtf['guidelines'] : array() ) ),
+			'detailsHtml'  => isset( $dtf['details_html'] ) ? $dtf['details_html'] : '',
+			'shippingHtml' => isset( $dtf['shipping_html'] ) ? $dtf['shipping_html'] : '',
+			'images'       => array_values( array_filter( (array) ( isset( $dtf['images'] ) ? $dtf['images'] : array() ) ) ),
+		);
+	}
+
+	/**
+	 * Shortcode handler: [fabricadtf_dtf]
+	 */
+	public function shortcode_dtf( $atts ) {
+		wp_enqueue_style( 'fdtf-dtf' );
+		wp_enqueue_script( 'fdtf-dtf' );
+		wp_add_inline_script(
+			'fdtf-dtf',
+			'window.FDTF_DTF_CONFIG = ' . wp_json_encode( $this->build_dtf_config() ) . ';',
+			'before'
+		);
+
+		// Carries a per-request nonce -> must not be served from a stale full-page cache.
+		if ( ! defined( 'DONOTCACHEPAGE' ) ) {
+			define( 'DONOTCACHEPAGE', true );
+		}
+		do_action( 'litespeed_control_set_nocache', 'FabricaDTF DTF a metro (nonce por pedido)' );
+		add_filter( 'litespeed_control_cacheable', '__return_false', 99 );
+
+		return '<div class="fdtf-dtf"></div>';
 	}
 
 	/**

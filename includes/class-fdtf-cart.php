@@ -20,6 +20,8 @@ class FDTF_Cart {
 		// AJAX endpoints (logged in + guests).
 		add_action( 'wp_ajax_fdtf_add_to_cart', array( $this, 'ajax_add_to_cart' ) );
 		add_action( 'wp_ajax_nopriv_fdtf_add_to_cart', array( $this, 'ajax_add_to_cart' ) );
+		add_action( 'wp_ajax_fdtf_add_dtf', array( $this, 'ajax_add_dtf' ) );
+		add_action( 'wp_ajax_nopriv_fdtf_add_dtf', array( $this, 'ajax_add_dtf' ) );
 
 		// Serves a fresh security nonce. The configurator page can be served from a
 		// full-page cache (LiteSpeed) whose baked-in nonce has since expired; the
@@ -108,6 +110,87 @@ class FDTF_Cart {
 	 */
 	public function ajax_nonce() {
 		wp_send_json_success( array( 'nonce' => wp_create_nonce( 'fdtf_nonce' ) ) );
+	}
+
+	/**
+	 * AJAX: add a "DTF a Metro" order to the cart. Quantity is in linear metres,
+	 * priced per-metre by tier. Price is computed server-side (never trust client).
+	 */
+	public function ajax_add_dtf() {
+		if ( ! check_ajax_referer( 'fdtf_nonce', 'nonce', false ) ) {
+			wp_send_json_error( array( 'code' => 'bad_nonce', 'message' => 'Sessão expirada. Tente novamente.' ) );
+		}
+
+		$s   = FDTF_Settings::get();
+		$dtf = isset( $s['dtf'] ) && is_array( $s['dtf'] ) ? $s['dtf'] : array();
+		if ( empty( $dtf['tiers'] ) || ! is_array( $dtf['tiers'] ) ) {
+			wp_send_json_error( array( 'message' => 'Configuração de preços indisponível.' ) );
+		}
+
+		$meters = isset( $_POST['meters'] ) ? intval( $_POST['meters'] ) : 0;
+		$min_m  = isset( $dtf['min_m'] ) ? max( 1, intval( $dtf['min_m'] ) ) : 1;
+		if ( $meters < $min_m ) {
+			wp_send_json_error( array( 'message' => 'Quantidade mínima de ' . $min_m . ' metro(s).' ) );
+		}
+
+		// Resolve the tier for this quantity (server-authoritative price).
+		$unit = null; $tier_label = '';
+		foreach ( $dtf['tiers'] as $t ) {
+			$tmin = intval( $t['min'] );
+			$tmax = intval( $t['max'] );
+			$hi   = ( $tmax > 0 ) ? $tmax : PHP_INT_MAX;
+			if ( $meters >= $tmin && $meters <= $hi ) {
+				$unit       = floatval( $t['price'] );
+				$tier_label = isset( $t['label'] ) ? $t['label'] : '';
+				break;
+			}
+		}
+		if ( null === $unit ) {
+			// Above the last defined range: use the highest tier.
+			$last       = end( $dtf['tiers'] );
+			$unit       = floatval( $last['price'] );
+			$tier_label = isset( $last['label'] ) ? $last['label'] : '';
+		}
+
+		// Art file is required for a DTF order.
+		$upload_cfg = array(
+			'accept' => isset( $dtf['accept'] ) ? $dtf['accept'] : '.png,.jpg,.jpeg,.pdf',
+			'max_mb' => isset( $dtf['max_mb'] ) ? intval( $dtf['max_mb'] ) : 40,
+		);
+		$art = $this->handle_upload( $upload_cfg, 'art' );
+		if ( is_wp_error( $art ) ) {
+			wp_send_json_error( array( 'message' => $art->get_error_message() ) );
+		}
+		if ( ! $art ) {
+			wp_send_json_error( array( 'message' => 'Por favor envie o ficheiro do seu design.' ) );
+		}
+
+		$line_total = round( $unit * $meters, 2 );
+		$notes      = isset( $_POST['notes'] ) ? sanitize_textarea_field( wp_unslash( $_POST['notes'] ) ) : '';
+
+		$fdtf = array(
+			'type'         => 'dtf',
+			'product_name' => isset( $dtf['title'] ) ? $dtf['title'] : 'DTF a Metro',
+			'meters'       => $meters,
+			'tier_label'   => $tier_label,
+			'unit_price'   => $unit,
+			'line_total'   => $line_total,
+			'art_name'     => $art['name'],
+			'art_url'      => $art['url'],
+			'art_path'     => $art['path'],
+			'notes'        => $notes,
+			'uid'          => md5( 'dtf' . $art['name'] . $meters . microtime( true ) ),
+		);
+
+		$added = WC()->cart->add_to_cart( self::base_product_id(), 1, 0, array(), array( 'fdtf' => $fdtf ) );
+		if ( ! $added ) {
+			wp_send_json_error( array( 'message' => 'Não foi possível adicionar ao carrinho.' ) );
+		}
+
+		wp_send_json_success( array(
+			'message'  => 'Adicionado ao carrinho!',
+			'redirect' => wc_get_cart_url(),
+		) );
 	}
 
 	public function ajax_add_to_cart() {
@@ -471,6 +554,29 @@ class FDTF_Cart {
 		}
 		$f = $cart_item['fdtf'];
 
+		// DTF a Metro line.
+		if ( isset( $f['type'] ) && 'dtf' === $f['type'] ) {
+			if ( ! empty( $f['tier_label'] ) ) {
+				$item_data[] = array( 'key' => 'Tamanho', 'value' => esc_html( $f['tier_label'] ) );
+			}
+			$item_data[] = array( 'key' => 'Metros', 'value' => intval( $f['meters'] ) . ' m' );
+			if ( ! empty( $f['unit_price'] ) ) {
+				$item_data[] = array( 'key' => 'Preço', 'value' => wc_price( floatval( $f['unit_price'] ) ) . ' / metro' );
+			}
+			if ( ! empty( $f['art_url'] ) ) {
+				$item_data[] = array(
+					'key'   => 'Ficheiro',
+					'value' => '<a href="' . esc_url( $f['art_url'] ) . '" target="_blank" rel="noopener">' . esc_html( $f['art_name'] ) . '</a>',
+				);
+			} elseif ( ! empty( $f['art_name'] ) ) {
+				$item_data[] = array( 'key' => 'Ficheiro', 'value' => esc_html( $f['art_name'] ) );
+			}
+			if ( ! empty( $f['notes'] ) ) {
+				$item_data[] = array( 'key' => 'Notas', 'value' => esc_html( $f['notes'] ) );
+			}
+			return $item_data;
+		}
+
 		if ( ! empty( $f['color'] ) ) {
 			$item_data[] = array( 'key' => 'Cor', 'value' => esc_html( $f['color'] ) );
 		}
@@ -532,7 +638,9 @@ class FDTF_Cart {
 	 */
 	public function cart_item_name( $name, $cart_item, $cart_item_key ) {
 		if ( ! empty( $cart_item['fdtf']['product_name'] ) ) {
-			return esc_html( $cart_item['fdtf']['product_name'] ) . ' <small>(personalizada)</small>';
+			$f     = $cart_item['fdtf'];
+			$tag   = ( isset( $f['type'] ) && 'dtf' === $f['type'] ) ? 'por metro' : 'personalizada';
+			return esc_html( $f['product_name'] ) . ' <small>(' . $tag . ')</small>';
 		}
 		return $name;
 	}
@@ -545,6 +653,27 @@ class FDTF_Cart {
 			return;
 		}
 		$f = $values['fdtf'];
+
+		// DTF a Metro order line.
+		if ( isset( $f['type'] ) && 'dtf' === $f['type'] ) {
+			$item->add_meta_data( 'Produto', $f['product_name'], true );
+			if ( ! empty( $f['tier_label'] ) ) {
+				$item->add_meta_data( 'Tamanho', $f['tier_label'], true );
+			}
+			$item->add_meta_data( 'Metros', intval( $f['meters'] ) . ' m', true );
+			$item->add_meta_data( 'Preço/metro', number_format( floatval( $f['unit_price'] ), 2, ',', '' ) . ' €', true );
+			if ( ! empty( $f['art_name'] ) ) {
+				$item->add_meta_data( 'Ficheiro', $f['art_name'], true );
+			}
+			if ( ! empty( $f['art_url'] ) ) {
+				$item->add_meta_data( 'Ficheiro (link)', $f['art_url'], true );
+			}
+			if ( ! empty( $f['notes'] ) ) {
+				$item->add_meta_data( 'Notas', $f['notes'], true );
+			}
+			$item->add_meta_data( '_fdtf_data', wp_json_encode( $f ), true );
+			return;
+		}
 
 		$item->add_meta_data( 'Modelo', $f['product_name'], true );
 		if ( ! empty( $f['color'] ) ) {

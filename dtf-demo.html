@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Transferências DTF por Tamanho — Fábrica DTF (protótipo)</title>
+<style>
+  :root{
+    --navy:#0b1a5b; --navy2:#223a8f; --ink:#1f2540; --muted:#6b7392;
+    --line:#e6e9f5; --bg:#f4f6fc; --card:#ffffff; --ok:#2f6bff; --warn:#e4572e;
+    --radius:16px; --shadow:0 8px 30px rgba(11,26,91,.08);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Helvetica Neue",Arial,system-ui,sans-serif;color:var(--ink);background:var(--bg);line-height:1.5}
+  img{max-width:100%;display:block}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 20px}
+  a{color:inherit;text-decoration:none}
+
+  /* top bars */
+  .topbar{background:#eef2ff;color:var(--navy);font-size:13px;font-weight:600}
+  .topbar .wrap{display:flex;justify-content:space-between;align-items:center;height:40px;gap:12px;flex-wrap:wrap}
+  .count{background:var(--navy);color:#fff;border-radius:6px;padding:2px 6px;font-variant-numeric:tabular-nums}
+  header.main{background:#fff;border-bottom:1px solid var(--line)}
+  header.main .wrap{display:flex;align-items:center;gap:18px;height:74px}
+  .logo{font-weight:800;font-size:24px;color:var(--navy);letter-spacing:-.5px}
+  .logo small{font-weight:700;color:var(--warn);font-size:14px;margin-left:2px}
+  .search{flex:1;display:flex;border:2px solid var(--line);border-radius:12px;overflow:hidden;max-width:560px}
+  .search input{flex:1;border:0;padding:12px 14px;font-size:14px;outline:none}
+  .search button{border:0;background:var(--warn);color:#fff;font-weight:700;padding:0 20px;cursor:pointer}
+  .navbar{background:var(--navy)}
+  .navbar .wrap{display:flex;gap:26px;height:48px;align-items:center;color:#fff;font-weight:600;font-size:14px;overflow-x:auto}
+  .navbar a{white-space:nowrap;opacity:.95}
+
+  .crumbs{color:var(--muted);font-size:13px;padding:16px 0}
+  .crumbs a:hover{color:var(--navy)}
+
+  .grid{display:grid;grid-template-columns:1.05fr 1fr;gap:34px;align-items:start;padding-bottom:40px}
+  @media(max-width:900px){.grid{grid-template-columns:1fr;gap:22px}}
+
+  /* gallery */
+  .gallery .main{position:relative;border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);background:#dfe7ff;aspect-ratio:1/1}
+  .gallery .main img{width:100%;height:100%;object-fit:cover}
+  .badge{position:absolute;top:14px;left:14px;background:var(--navy);color:#fff;font-size:12px;font-weight:700;padding:7px 12px;border-radius:20px;box-shadow:var(--shadow)}
+  .thumbs{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap}
+  .thumbs button{width:84px;height:84px;border-radius:12px;border:2px solid var(--line);overflow:hidden;background:#eef2ff;cursor:pointer;padding:0}
+  .thumbs button.sel{border-color:var(--navy)}
+  .thumbs img{width:100%;height:100%;object-fit:cover}
+
+  .acc{margin-top:22px;border-top:1px solid var(--line)}
+  .acc details{border-bottom:1px solid var(--line)}
+  .acc summary{cursor:pointer;list-style:none;padding:16px 2px;font-weight:700;color:var(--navy);display:flex;justify-content:space-between;align-items:center}
+  .acc summary::-webkit-details-marker{display:none}
+  .acc summary::after{content:"⌄";font-size:18px;color:var(--muted)}
+  .acc .body{padding:0 2px 18px;color:#3a4166;font-size:14px}
+  .acc h4{margin:14px 0 4px;color:var(--navy);font-size:15px}
+
+  /* right column */
+  h1{font-size:34px;line-height:1.1;margin:0 0 10px;color:var(--navy);letter-spacing:-.5px}
+  .rating{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:14px;margin-bottom:14px}
+  .stars{color:#f5a623;letter-spacing:2px;font-size:16px}
+  .price{font-size:32px;font-weight:800;color:var(--navy)}
+  .price span{font-size:15px;color:var(--muted);font-weight:600}
+  .ship-note{color:var(--muted);font-size:13px;margin:2px 0 14px}
+  .desc{color:#3a4166;font-size:14px;margin-bottom:16px}
+  .features{display:grid;grid-template-columns:1fr 1fr;gap:10px 18px;margin-bottom:18px}
+  .features div{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:var(--ink)}
+  .features .ic{width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;color:var(--ok)}
+
+  .guide{border:1px dashed #c7d0f2;border-radius:14px;padding:14px 16px;margin-bottom:22px}
+  .guide .gtitle{display:flex;align-items:center;gap:8px;font-weight:700;color:var(--navy);margin-bottom:10px}
+  .guide .row{border-radius:10px;padding:10px 12px;font-size:13.5px;margin-bottom:8px}
+  .guide .row.blue{background:#eef2ff}
+  .guide .row.red{background:#fdecec}
+  .guide .row b{color:var(--navy)}
+
+  .step{display:flex;align-items:center;gap:10px;margin:22px 0 12px;font-weight:800;color:var(--navy);font-size:17px}
+  .step .n{width:28px;height:28px;border-radius:50%;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px}
+
+  .drop{border:2px dashed #b9c4ee;border-radius:14px;background:#fbfcff;padding:26px 18px;text-align:center;cursor:pointer;transition:.15s}
+  .drop:hover,.drop.drag{border-color:var(--ok);background:#f2f6ff}
+  .drop .ic{font-size:26px}
+  .drop b{display:block;margin:8px 0 4px;color:var(--navy)}
+  .drop small{color:var(--muted)}
+  .filerow{display:none;align-items:center;gap:10px;background:#eef2ff;border-radius:10px;padding:10px 12px;font-size:14px;margin-top:8px}
+  .filerow .rm{margin-left:auto;border:0;background:transparent;color:var(--warn);font-weight:700;cursor:pointer}
+
+  .tiers{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+  @media(max-width:520px){.tiers{grid-template-columns:repeat(2,1fr)}}
+  .tier{border:2px solid var(--line);border-radius:12px;background:#fff;padding:12px 8px;text-align:center;cursor:pointer;font-weight:700;font-size:13.5px;color:var(--ink)}
+  .tier small{display:block;color:var(--muted);font-weight:600;margin-top:3px}
+  .tier.sel{border-color:var(--navy);background:#eef2ff;color:var(--navy)}
+  .tier-price{margin-top:10px;background:#eef2ff;border-radius:10px;padding:12px 14px;display:flex;justify-content:space-between;font-weight:700;color:var(--navy)}
+
+  .qty{display:inline-flex;align-items:center;border:2px solid var(--line);border-radius:12px;overflow:hidden}
+  .qty button{width:44px;height:44px;border:0;background:#fff;font-size:20px;cursor:pointer;color:var(--navy)}
+  .qty input{width:70px;height:44px;border:0;text-align:center;font-size:16px;font-weight:700;outline:none}
+  .qty-note{color:var(--muted);font-size:13px;margin-top:6px}
+
+  .summary{background:#f7f9ff;border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-top:14px}
+  .summary .l{display:flex;justify-content:space-between;font-size:14px;margin:6px 0;color:#3a4166}
+  .summary .total{display:flex;justify-content:space-between;font-size:20px;font-weight:800;color:var(--navy);border-top:1px solid var(--line);padding-top:10px;margin-top:8px}
+  .cta{width:100%;margin-top:16px;border:0;border-radius:14px;background:var(--navy);color:#fff;font-weight:800;font-size:16px;padding:16px;cursor:pointer;box-shadow:var(--shadow)}
+  .cta:hover{background:var(--navy2)}
+  .protobar{background:#fff7e6;border:1px solid #ffe1a6;color:#8a5a00;font-size:12.5px;border-radius:10px;padding:8px 12px;margin:14px 0}
+</style>
+</head>
+<body>
+
+<div class="topbar"><div class="wrap"><span>Envia HOJE se encomendar nas próximas horas</span><span>Envio grátis em encomendas acima de 99€</span></div></div>
+
+<header class="main"><div class="wrap">
+  <div class="logo">Fábrica<small>DTF</small></div>
+  <div class="search"><input placeholder="Procurar DTF, Gang Sheets, materiais…"><button>Procurar</button></div>
+  <div style="margin-left:auto;font-weight:700;color:var(--navy)">📞 +351 937 661 849</div>
+</div></header>
+
+<nav class="navbar"><div class="wrap">
+  <a>DTF TRANSFER</a><a>AUTOCOLANTES UV DTF</a><a>VESTUÁRIO EM BRANCO</a><a>T-SHIRT PERSONALIZADA</a><a>SUPORTE</a>
+</div></nav>
+
+<div class="wrap">
+  <div class="crumbs"><a>Início</a> / <a>Transferências DTF</a> / Personalizadas por Tamanho</div>
+
+  <div class="protobar">Protótipo — valores e imagens de exemplo. A tabela de preços real e as imagens finais entram assim que o cliente as passar.</div>
+
+  <div class="grid">
+    <!-- LEFT: gallery + accordions -->
+    <div class="gallery">
+      <div class="main">
+        <span class="badge">✦ Funciona com qualquer design</span>
+        <img id="mainimg" src="https://placehold.co/900x900/0b1a5b/ffffff?text=Transfer%C3%AAncia+DTF" alt="Transferência DTF">
+      </div>
+      <div class="thumbs" id="thumbs"></div>
+
+      <div class="acc">
+        <details open><summary>Detalhes do Produto</summary>
+          <div class="body">
+            <p>Criar vestuário profissional começa com as ferramentas certas. Fornecemos Transferências DTF Personalizadas por Tamanho de alta qualidade para escalar o seu negócio de forma eficiente — detalhes nítidos e cores vivas em qualquer design, prontas para aplicar em várias peças com resultado profissional.</p>
+            <h4>Porquê escolher DTF por Tamanho</h4>
+            <p>A precisão é essencial na impressão têxtil moderna. Ao encomendar por tamanho evita filme desperdiçado e material em excesso — obtém as dimensões exatas do seu projeto, mantendo a produção rentável e organizada.</p>
+            <h4>Resultado profissional em todas as encomendas</h4>
+            <p>Forte adesão em vários tecidos, toque suave e aspeto profissional em cada peça, com desempenho consistente em pequenas e grandes tiragens.</p>
+          </div>
+        </details>
+        <details><summary>Envio</summary>
+          <div class="body"><p>Produção rápida e envio para todo o país. Envio grátis em encomendas acima de 99€. Os portes finais são calculados no checkout, conforme o método de envio já configurado na loja.</p></div>
+        </details>
+      </div>
+    </div>
+
+    <!-- RIGHT: buy box -->
+    <div class="buy">
+      <h1>Transferências DTF Personalizadas por Tamanho</h1>
+      <div class="rating"><span class="stars">★★★★★</span> 216 avaliações</div>
+      <div class="price" id="unitprice">6,70€ <span>/metro</span></div>
+      <div class="ship-note">Portes calculados no checkout</div>
+      <p class="desc">Transferências DTF por tamanho para a sua marca. Impressões de alta qualidade, sob medida, com cores vivas e detalhes nítidos para elevar qualquer design.</p>
+
+      <div class="features">
+        <div><span class="ic">✔</span> Aplica em todos os tecidos</div>
+        <div><span class="ic">✔</span> Cores vibrantes</div>
+        <div><span class="ic">✔</span> Hot Peel</div>
+        <div><span class="ic">✔</span> 100 lavagens garantidas</div>
+      </div>
+
+      <div class="guide">
+        <div class="gtitle">⚠ Diretrizes Importantes do Design</div>
+        <div class="row blue">Para melhores resultados, envie um ficheiro com pelo menos <b>300 DPI</b> e <b>fundo transparente</b>.</div>
+        <div class="row red">O design deve estar limpo e pronto a imprimir. <b>Sem pixéis semi-transparentes</b> nem gradientes de bordas suaves.</div>
+        <div class="row blue">Encomendas com ficheiros inadequados podem ficar <b>em espera</b> até enviarmos um pedido de atualização.</div>
+      </div>
+
+      <div class="step"><span class="n">1</span> Envie o seu design</div>
+      <div class="drop" id="drop">
+        <div class="ic">⬆️</div>
+        <b>Arraste e largue aqui o seu design</b>
+        <small>ou clique para escolher · PNG, JPG, PDF · máx 40 MB</small>
+      </div>
+      <input type="file" id="file" accept=".png,.jpg,.jpeg,.pdf" style="display:none">
+      <div class="filerow" id="filerow">🖼️ <span id="fname"></span><button class="rm" id="rm">remover</button></div>
+
+      <div class="step"><span class="n">2</span> Escolha o tamanho (metros)</div>
+      <div class="tiers" id="tiers"></div>
+      <div class="tier-price"><span id="tierlabel">1 a 9 metros</span><span id="tierprice">6,70€ / metro</span></div>
+
+      <div class="step"><span class="n">3</span> Quantidade (metros lineares)</div>
+      <div class="qty">
+        <button id="minus">−</button>
+        <input id="meters" type="number" min="1" value="1" inputmode="numeric">
+        <button id="plus">+</button>
+      </div>
+      <div class="qty-note">Indique quantos metros lineares pretende. O preço por metro ajusta-se ao escalão.</div>
+
+      <div class="summary">
+        <div class="l"><span>Tamanho (<span id="s-tier">1 a 9 metros</span>)</span><span id="s-unit">6,70€ / metro</span></div>
+        <div class="l"><span>Metros</span><span id="s-qty">× 1</span></div>
+        <div class="total"><span>Total</span><span id="s-total">6,70€</span></div>
+      </div>
+
+      <button class="cta" id="cta">🛒 Adicionar ao carrinho</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  // ---- placeholder data (swap for the client's real tariff) ----
+  var TIERS = [
+    { label:"1 a 9 metros",     min:1,   max:9,    price:6.70 },
+    { label:"10 a 24 metros",   min:10,  max:24,   price:6.20 },
+    { label:"25 a 49 metros",   min:25,  max:49,   price:5.75 },
+    { label:"50 a 99 metros",   min:50,  max:99,   price:5.25 },
+    { label:"100 a 299 metros", min:100, max:299,  price:4.75 },
+    { label:"300 a 499 metros", min:300, max:499,  price:4.35 },
+    { label:"500+ metros",      min:500, max:0,    price:3.65 }
+  ];
+  var THUMBS = [
+    "https://placehold.co/200x200/0b1a5b/ffffff?text=DTF+1",
+    "https://placehold.co/200x200/223a8f/ffffff?text=DTF+2",
+    "https://placehold.co/200x200/2f6bff/ffffff?text=DTF+3",
+    "https://placehold.co/200x200/6b7392/ffffff?text=Designs",
+    "https://placehold.co/200x200/1f2540/ffffff?text=Guia+de+Tamanhos"
+  ];
+
+  function money(n){ return n.toFixed(2).replace(".", ",") + "€"; }
+  var state = { tier:0, meters:1, file:null };
+
+  // thumbs
+  var thumbs = document.getElementById("thumbs");
+  var mainimg = document.getElementById("mainimg");
+  THUMBS.forEach(function(src,i){
+    var b = document.createElement("button");
+    b.className = i===0 ? "sel" : "";
+    b.innerHTML = '<img src="'+src+'" alt="">';
+    b.addEventListener("click", function(){
+      mainimg.src = src.replace("200x200","900x900");
+      [].forEach.call(thumbs.children, function(c){ c.className=""; });
+      b.className="sel";
+    });
+    thumbs.appendChild(b);
+  });
+
+  // tiers: pick the tier that matches the meters, or let user click
+  var tiersEl = document.getElementById("tiers");
+  function tierForMeters(m){
+    for (var i=0;i<TIERS.length;i++){
+      var t = TIERS[i], hi = t.max>0 ? t.max : Infinity;
+      if (m>=t.min && m<=hi) return i;
+    }
+    return TIERS.length-1;
+  }
+  function renderTiers(){
+    tiersEl.innerHTML = "";
+    TIERS.forEach(function(t,i){
+      var d = document.createElement("div");
+      d.className = "tier" + (i===state.tier ? " sel":"");
+      d.innerHTML = t.label + "<small>" + money(t.price) + " / metro</small>";
+      d.addEventListener("click", function(){
+        state.tier = i;
+        // snap meters into the tier's range so the price is coherent
+        if (state.meters < t.min) { state.meters = t.min; }
+        if (t.max>0 && state.meters > t.max) { state.meters = t.max; }
+        document.getElementById("meters").value = state.meters;
+        update();
+      });
+      tiersEl.appendChild(d);
+    });
+  }
+
+  function update(){
+    // meters can also drive the tier (whichever the user touches last)
+    var t = TIERS[state.tier];
+    var unit = t.price;
+    var total = unit * state.meters;
+    document.getElementById("unitprice").innerHTML = money(unit) + ' <span>/metro</span>';
+    document.getElementById("tierlabel").textContent = t.label;
+    document.getElementById("tierprice").textContent = money(unit) + " / metro";
+    document.getElementById("s-tier").textContent = t.label;
+    document.getElementById("s-unit").textContent = money(unit) + " / metro";
+    document.getElementById("s-qty").textContent = "× " + state.meters;
+    document.getElementById("s-total").textContent = money(total);
+    renderTiers();
+  }
+
+  // quantity
+  var metersInp = document.getElementById("meters");
+  function setMeters(v){
+    v = Math.max(1, parseInt(v||1,10));
+    state.meters = v;
+    state.tier = tierForMeters(v); // meters lead the tier
+    metersInp.value = v;
+    update();
+  }
+  document.getElementById("minus").addEventListener("click", function(){ setMeters(state.meters-1); });
+  document.getElementById("plus").addEventListener("click", function(){ setMeters(state.meters+1); });
+  metersInp.addEventListener("input", function(){ setMeters(metersInp.value); });
+
+  // upload
+  var drop = document.getElementById("drop"), file = document.getElementById("file");
+  var filerow = document.getElementById("filerow"), fname = document.getElementById("fname");
+  drop.addEventListener("click", function(){ file.click(); });
+  ["dragover","dragenter"].forEach(function(e){ drop.addEventListener(e,function(ev){ ev.preventDefault(); drop.classList.add("drag"); }); });
+  ["dragleave","drop"].forEach(function(e){ drop.addEventListener(e,function(ev){ ev.preventDefault(); drop.classList.remove("drag"); }); });
+  drop.addEventListener("drop", function(ev){ if(ev.dataTransfer.files[0]) pick(ev.dataTransfer.files[0]); });
+  file.addEventListener("change", function(){ if(file.files[0]) pick(file.files[0]); });
+  function pick(f){ state.file=f; fname.textContent=f.name; filerow.style.display="flex"; drop.style.display="none"; }
+  document.getElementById("rm").addEventListener("click", function(){ state.file=null; file.value=""; filerow.style.display="none"; drop.style.display="block"; });
+
+  document.getElementById("cta").addEventListener("click", function(){
+    if(!state.file){ alert("Por favor envie o ficheiro do seu design primeiro."); return; }
+    alert("Protótipo: seria adicionado ao carrinho\n\n" + TIERS[state.tier].label + " · " + state.meters + " metros · " + money(TIERS[state.tier].price*state.meters) + "\nFicheiro: " + state.file.name);
+  });
+
+  renderTiers(); update();
+})();
+</script>
+</body>
+</html>

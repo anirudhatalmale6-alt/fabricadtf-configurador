@@ -123,6 +123,39 @@ class FDTF_Settings {
 				array( 'code' => 'normal',      'label' => 'Normal até 9 dias',      'days' => 9, 'pct' => 0,  'unit' => 0, 'default' => 1 ),
 				array( 'code' => 'prioritaria', 'label' => 'Prioritária até 5 dias', 'days' => 5, 'pct' => 10, 'unit' => 0, 'default' => 0 ),
 			),
+			// "DTF a Metro" ordering page (shortcode [fabricadtf_dtf]): quantity is in
+			// linear metres, priced by tier. Prices below match the live DTF a Metro product.
+			'dtf'         => array(
+				'title'        => 'Transferências DTF Personalizadas por Tamanho',
+				'badge'        => 'Funciona com qualquer design',
+				'rating'       => 5,
+				'reviews'      => 216,
+				'desc'         => 'Transferências DTF por tamanho para a sua marca. Impressões de alta qualidade, sob medida, com cores vivas e detalhes nítidos para elevar qualquer design.',
+				'unit_label'   => '/metro',
+				'qty_label'    => 'Quantidade (metros lineares)',
+				'min_m'        => 1,
+				'max_mb'       => 40,
+				'accept'       => '.png,.jpg,.jpeg,.pdf',
+				'accept_label' => 'PNG, JPG, PDF · máx 40 MB',
+				'tiers'        => array(
+					array( 'label' => '1 a 9 metros',     'min' => 1,   'max' => 9,   'price' => 6.70 ),
+					array( 'label' => '10 a 24 metros',   'min' => 10,  'max' => 24,  'price' => 6.20 ),
+					array( 'label' => '25 a 49 metros',   'min' => 25,  'max' => 49,  'price' => 5.75 ),
+					array( 'label' => '50 a 99 metros',   'min' => 50,  'max' => 99,  'price' => 5.25 ),
+					array( 'label' => '100 a 299 metros', 'min' => 100, 'max' => 299, 'price' => 4.75 ),
+					array( 'label' => '300 a 499 metros', 'min' => 300, 'max' => 499, 'price' => 4.35 ),
+					array( 'label' => '500+ metros',      'min' => 500, 'max' => 0,   'price' => 3.65 ),
+				),
+				'features'     => array( 'Aplica em todos os tecidos', 'Cores vibrantes', 'Hot Peel', '100 lavagens garantidas' ),
+				'guidelines'   => array(
+					array( 'tone' => 'blue', 'html' => 'Para melhores resultados, envie um ficheiro com pelo menos <b>300 DPI</b> e <b>fundo transparente</b>.' ),
+					array( 'tone' => 'red',  'html' => 'O design deve estar limpo e pronto a imprimir. <b>Sem pixéis semi-transparentes</b> nem gradientes de bordas suaves.' ),
+					array( 'tone' => 'blue', 'html' => 'Encomendas com ficheiros inadequados podem ficar <b>em espera</b> até enviarmos um pedido de atualização.' ),
+				),
+				'details_html' => '<p>Fornecemos Transferências DTF Personalizadas por Tamanho de alta qualidade para escalar o seu negócio de forma eficiente — detalhes nítidos e cores vivas em qualquer design, prontas para aplicar em várias peças com resultado profissional.</p><h4>Porquê escolher DTF por Tamanho</h4><p>A precisão é essencial na impressão têxtil moderna. Ao encomendar por tamanho evita filme desperdiçado e material em excesso — obtém as dimensões exatas do seu projeto, mantendo a produção rentável e organizada.</p>',
+				'shipping_html'=> '<p>Produção rápida e envio para todo o país. Envio grátis em encomendas acima de 99€. Os portes finais são calculados no checkout, conforme o método de envio já configurado na loja.</p>',
+				'images'       => array(),
+			),
 		);
 	}
 
