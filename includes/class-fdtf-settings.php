@@ -157,7 +157,7 @@ class FDTF_Settings {
 				),
 				'details_html' => '<p>Fornecemos Transferências DTF Personalizadas por Tamanho de alta qualidade para escalar o seu negócio de forma eficiente — detalhes nítidos e cores vivas em qualquer design, prontas para aplicar em várias peças com resultado profissional.</p><h4>Porquê escolher DTF por Tamanho</h4><p>A precisão é essencial na impressão têxtil moderna. Ao encomendar por tamanho evita filme desperdiçado e material em excesso — obtém as dimensões exatas do seu projeto, mantendo a produção rentável e organizada.</p>',
 				'shipping_html'=> '<p>Produção rápida e envio para todo o país. Envio grátis em encomendas acima de 99€. Os portes finais são calculados no checkout, conforme o método de envio já configurado na loja.</p>',
-				'images'       => array(),
+				'images'       => array( FDTF_URL . 'assets/dtf-images/dtf-roll-1.jpg' ),
 			),
 		);
 	}
