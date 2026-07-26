@@ -33,10 +33,36 @@ class FDTF_Plugin {
 		add_shortcode( 'fabricadtf_configurador', array( $this, 'shortcode' ) );
 		add_shortcode( 'fabricadtf_dtf', array( $this, 'shortcode_dtf' ) );
 		add_action( 'wp_enqueue_scripts', array( $this, 'register_assets' ) );
+		// Send the old "DTF a Metro" product page to the new redesigned page.
+		add_action( 'template_redirect', array( $this, 'maybe_redirect_old_dtf' ) );
 		// Load a translations file if present.
 		add_action( 'init', function () {
 			load_plugin_textdomain( 'fabricadtf-configurador', false, dirname( plugin_basename( FDTF_FILE ) ) . '/languages' );
 		} );
+	}
+
+	/**
+	 * Redirect the legacy "DTF a Metro" WooCommerce product to the new redesigned
+	 * page, so every existing link (homepage, mega-menu, SEO, bookmarks) lands on
+	 * the new page. The old product stays in the database as a reversible backup —
+	 * remove the 'fdtf_dtf_prod_page_id' option (or the old product slug) to undo.
+	 */
+	public function maybe_redirect_old_dtf() {
+		if ( is_admin() ) {
+			return;
+		}
+		$target = intval( get_option( 'fdtf_dtf_prod_page_id' ) );
+		if ( ! $target ) {
+			return;
+		}
+		if ( is_singular( 'product' ) ) {
+			$obj = get_queried_object();
+			if ( $obj && isset( $obj->post_name, $obj->ID )
+				&& 'dtf-a-metro' === $obj->post_name && (int) $obj->ID !== $target ) {
+				wp_safe_redirect( get_permalink( $target ), 302 );
+				exit;
+			}
+		}
 	}
 
 	/**
