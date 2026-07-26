@@ -55,6 +55,8 @@
 
 .fdtf-dtf .fd-step{display:flex;align-items:center;gap:10px;margin:22px 0 12px;font-weight:800;color:var(--fd-navy);font-size:17px}
 .fdtf-dtf .fd-step .fd-n{width:28px;height:28px;border-radius:50%;background:var(--fd-navy);color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;flex:0 0 28px}
+.fdtf-dtf .fd-step .fd-optional{font-weight:600;font-size:13px;color:var(--fd-muted)}
+.fdtf-dtf .fd-uploadnote{margin-top:8px;color:var(--fd-muted);font-size:13px;line-height:1.4}
 
 .fdtf-dtf .fd-drop{border:2px dashed #b9c4ee;border-radius:14px;background:#fbfcff;padding:26px 18px;text-align:center;cursor:pointer;transition:.15s}
 .fdtf-dtf .fd-drop:hover,.fdtf-dtf .fd-drop.drag{border-color:var(--fd-ok);background:#f2f6ff}

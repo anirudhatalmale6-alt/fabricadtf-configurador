@@ -152,7 +152,8 @@ class FDTF_Cart {
 			$tier_label = isset( $last['label'] ) ? $last['label'] : '';
 		}
 
-		// Art file is required for a DTF order.
+		// Art file is OPTIONAL — the customer may instead paste a link (e.g. WeTransfer)
+		// in the notes. If a file IS sent, still validate its type/size.
 		$upload_cfg = array(
 			'accept' => isset( $dtf['accept'] ) ? $dtf['accept'] : '.png,.jpg,.jpeg,.pdf',
 			'max_mb' => isset( $dtf['max_mb'] ) ? intval( $dtf['max_mb'] ) : 40,
@@ -161,9 +162,7 @@ class FDTF_Cart {
 		if ( is_wp_error( $art ) ) {
 			wp_send_json_error( array( 'message' => $art->get_error_message() ) );
 		}
-		if ( ! $art ) {
-			wp_send_json_error( array( 'message' => 'Por favor envie o ficheiro do seu design.' ) );
-		}
+		// $art may be null (no file uploaded) — that's allowed.
 
 		$line_total = round( $unit * $meters, 2 );
 		$notes      = isset( $_POST['notes'] ) ? sanitize_textarea_field( wp_unslash( $_POST['notes'] ) ) : '';
@@ -175,9 +174,9 @@ class FDTF_Cart {
 			'tier_label'   => $tier_label,
 			'unit_price'   => $unit,
 			'line_total'   => $line_total,
-			'art_name'     => $art['name'],
-			'art_url'      => $art['url'],
-			'art_path'     => $art['path'],
+			'art_name'     => $art ? $art['name'] : '',
+			'art_url'      => $art ? $art['url'] : '',
+			'art_path'     => $art ? $art['path'] : '',
 			'notes'        => $notes,
 			'uid'          => md5( 'dtf' . $art['name'] . $meters . microtime( true ) ),
 		);

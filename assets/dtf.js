@@ -92,8 +92,8 @@
       buy.appendChild(g);
     }
 
-    // step 1 — upload
-    buy.appendChild(el('<div class="fd-step"><span class="fd-n">1</span> Envie o seu design</div>'));
+    // step 1 — upload (optional)
+    buy.appendChild(el('<div class="fd-step"><span class="fd-n">1</span> Envie o seu design <span class="fd-optional">(opcional)</span></div>'));
     var drop = el('<div class="fd-drop"><div class="fd-upic">⬆️</div><b>Arraste e largue aqui o seu design</b><small>ou clique para escolher · ' + esc(CFG.acceptLabel || "PNG, JPG, PDF") + '</small></div>');
     var file = el('<input type="file" accept="' + esc(CFG.accept || ".png,.jpg,.jpeg,.pdf") + '" style="display:none">');
     var filerow = el('<div class="fd-filerow" style="display:none">🖼️ <span data-role="fname"></span><button type="button" class="fd-rm">remover</button></div>');
@@ -113,6 +113,7 @@
       state.file = null; file.value = ""; filerow.style.display = "none"; drop.style.display = "block";
     });
     buy.appendChild(drop); buy.appendChild(file); buy.appendChild(filerow);
+    if (CFG.uploadNote) buy.appendChild(el('<div class="fd-uploadnote">' + esc(CFG.uploadNote) + '</div>'));
 
     // step 2 — tiers
     buy.appendChild(el('<div class="fd-step"><span class="fd-n">2</span> Escolha o tamanho (metros)</div>'));
@@ -131,7 +132,9 @@
     buy.appendChild(qty);
     buy.appendChild(el('<div class="fd-qtynote">Indique quantos metros lineares pretende. O preço por metro ajusta-se ao escalão.</div>'));
 
-    var notes = el('<textarea class="fd-notes" placeholder="Notas para a encomenda (opcional)"></textarea>');
+    buy.appendChild(el('<div class="fd-step"><span class="fd-n">4</span> ' + esc(CFG.notesLabel || "Notas (opcional)") + '</div>'));
+    var notes = el('<textarea class="fd-notes" rows="3"></textarea>');
+    notes.setAttribute("placeholder", CFG.notesPh || "Notas para a encomenda (opcional).");
     buy.appendChild(notes);
 
     // summary + cta
@@ -183,14 +186,13 @@
     inp.addEventListener("input", function () { setMeters(inp.value); });
 
     cta.addEventListener("click", function () {
-      if (!state.file) { alert("Por favor envie o ficheiro do seu design primeiro."); return; }
       if (state.meters < MINM) { alert("Quantidade mínima de " + MINM + " metro(s)."); return; }
       var fd = new FormData();
       fd.append("action", "fdtf_add_dtf");
       fd.append("nonce", CFG.nonce || "");
       fd.append("meters", state.meters);
       fd.append("notes", notes.value || "");
-      fd.append("art", state.file);
+      if (state.file) fd.append("art", state.file); // upload is optional
       cta.disabled = true;
       postToCart(fd, true, cta);
     });
