@@ -50,7 +50,20 @@ class FDTF_Cart {
 	public static function base_product_id() {
 		$id = (int) get_option( FDTF_BASE_PRODUCT_OPTION );
 		if ( $id && 'product' === get_post_type( $id ) ) {
-			return $id;
+			// Self-heal: the container must stay published & purchasable, otherwise
+			// logged-out customers get "este produto não pode ser comprado" and
+			// add-to-cart fails (while logged-in admins can still buy a draft,
+			// which is why the bug looks intermittent).
+			$product = wc_get_product( $id );
+			if ( $product ) {
+				$changed = false;
+				if ( 'publish' !== $product->get_status() ) { $product->set_status( 'publish' ); $changed = true; }
+				if ( '' === (string) $product->get_price() ) { $product->set_price( 0 ); $product->set_regular_price( 0 ); $changed = true; }
+				if ( 'hidden' !== $product->get_catalog_visibility() ) { $product->set_catalog_visibility( 'hidden' ); $changed = true; }
+				if ( ! $product->is_in_stock() ) { $product->set_stock_status( 'instock' ); $changed = true; }
+				if ( $changed ) { $product->save(); }
+				return $id;
+			}
 		}
 
 		$product = new WC_Product_Simple();
@@ -59,6 +72,7 @@ class FDTF_Cart {
 		$product->set_catalog_visibility( 'hidden' );
 		$product->set_price( 0 );
 		$product->set_regular_price( 0 );
+		$product->set_stock_status( 'instock' );
 		$product->set_sold_individually( false );
 		$product->set_virtual( false );
 		$product->set_tax_status( 'taxable' );
@@ -341,61 +355,97 @@ class FDTF_Cart {
 			return null;
 		}
 
-		$file    = $_FILES[ $field ];
+		$file = $_FILES[ $field ];
+
+		// PHP-level upload errors (partial upload, size limits, no tmp dir…).
+		if ( isset( $file['error'] ) && UPLOAD_ERR_OK !== (int) $file['error'] ) {
+			if ( UPLOAD_ERR_NO_FILE === (int) $file['error'] ) {
+				return null;
+			}
+			if ( in_array( (int) $file['error'], array( UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE ), true ) ) {
+				return new WP_Error( 'too_big', 'Ficheiro demasiado grande.' );
+			}
+			return new WP_Error( 'upload_fail', 'Falha no carregamento do ficheiro. Tente novamente.' );
+		}
+
+		// Must be a genuine PHP upload (not an injected path).
+		if ( empty( $file['tmp_name'] ) || ! is_uploaded_file( $file['tmp_name'] ) ) {
+			return new WP_Error( 'upload_fail', 'Falha no carregamento do ficheiro. Tente novamente.' );
+		}
+
 		$max     = intval( $s['max_mb'] ) * 1024 * 1024;
 		$allowed = array_filter( array_map(
 			function ( $e ) { return ltrim( strtolower( trim( $e ) ), '.' ); },
 			explode( ',', $s['accept'] )
 		) );
+		// Safety net: if no accept list is configured, fall back to the known-safe set.
+		if ( empty( $allowed ) ) {
+			$allowed = array( 'png', 'jpg', 'jpeg', 'pdf' );
+		}
 
 		if ( $file['size'] > $max ) {
 			return new WP_Error( 'too_big', 'Ficheiro demasiado grande (máx ' . intval( $s['max_mb'] ) . ' MB).' );
 		}
 
 		$ext = strtolower( pathinfo( $file['name'], PATHINFO_EXTENSION ) );
-		if ( $allowed && ! in_array( $ext, $allowed, true ) ) {
+		if ( $ext && ! in_array( $ext, $allowed, true ) ) {
 			return new WP_Error( 'bad_type', 'Formato não permitido. Aceites: ' . esc_html( $s['accept'] ) );
 		}
 
-		$mimes = array(
-			'png' => 'image/png',
-			'jpg' => 'image/jpeg',
-			'jpeg'=> 'image/jpeg',
-			'pdf' => 'application/pdf',
-			'svg' => 'image/svg+xml',
-		);
-
-		if ( ! function_exists( 'wp_handle_upload' ) ) {
-			require_once ABSPATH . 'wp-admin/includes/file.php';
+		// Verify the real file content matches the extension (defence in depth).
+		// We move the file ourselves instead of wp_handle_upload() because the
+		// latter requires the 'unfiltered_upload' capability, which logged-out
+		// customers never have — that gate would reject every guest upload.
+		if ( ! $this->content_matches_ext( $file['tmp_name'], $ext ) ) {
+			return new WP_Error( 'bad_type', 'O ficheiro não é um ' . strtoupper( $ext ) . ' válido.' );
 		}
 
 		$dir = self::upload_dir();
-		add_filter( 'upload_dir', $cb = function ( $u ) use ( $dir ) {
-			$u['path']   = $dir['path'];
-			$u['url']    = $dir['url'];
-			$u['subdir'] = '';
-			return $u;
-		} );
-
-		$safe_name = wp_unique_filename( $dir['path'], sanitize_file_name( $file['name'] ) );
-		$file['name'] = $safe_name;
-
-		$moved = wp_handle_upload( $file, array(
-			'test_form' => false,
-			'mimes'     => $mimes,
-		) );
-
-		remove_filter( 'upload_dir', $cb );
-
-		if ( ! $moved || isset( $moved['error'] ) ) {
-			return new WP_Error( 'upload_fail', isset( $moved['error'] ) ? $moved['error'] : 'Falha no upload.' );
+		if ( empty( $dir['path'] ) || ! wp_is_writable( $dir['path'] ) ) {
+			return new WP_Error( 'upload_fail', 'Não foi possível guardar o ficheiro. Tente novamente.' );
 		}
 
+		$safe_name = wp_unique_filename( $dir['path'], sanitize_file_name( $file['name'] ) );
+		$dest      = trailingslashit( $dir['path'] ) . $safe_name;
+
+		if ( ! move_uploaded_file( $file['tmp_name'], $dest ) ) {
+			return new WP_Error( 'upload_fail', 'Não foi possível guardar o ficheiro. Tente novamente.' );
+		}
+		// Match WordPress' default upload permissions.
+		$perms = ( defined( 'FS_CHMOD_FILE' ) && FS_CHMOD_FILE ) ? FS_CHMOD_FILE : 0644;
+		@chmod( $dest, $perms );
+
 		return array(
-			'name' => sanitize_file_name( $file['name'] ),
-			'url'  => $moved['url'],
-			'path' => $moved['file'],
+			'name' => $safe_name,
+			'url'  => trailingslashit( $dir['url'] ) . $safe_name,
+			'path' => $dest,
 		);
+	}
+
+	/**
+	 * Confirm the uploaded file's real content matches its extension.
+	 * Images must decode as that image type; PDFs must start with %PDF.
+	 */
+	private function content_matches_ext( $tmp, $ext ) {
+		if ( in_array( $ext, array( 'png', 'jpg', 'jpeg' ), true ) ) {
+			$info = @getimagesize( $tmp );
+			if ( ! $info || empty( $info[2] ) ) {
+				return false;
+			}
+			$want = ( 'png' === $ext ) ? array( IMAGETYPE_PNG ) : array( IMAGETYPE_JPEG );
+			return in_array( (int) $info[2], $want, true );
+		}
+		if ( 'pdf' === $ext ) {
+			$fh = @fopen( $tmp, 'rb' );
+			if ( ! $fh ) {
+				return false;
+			}
+			$head = fread( $fh, 5 );
+			fclose( $fh );
+			return ( '%PDF-' === substr( (string) $head, 0, 5 ) );
+		}
+		// Unknown extension already rejected by the allow-list above.
+		return false;
 	}
 
 	/**
