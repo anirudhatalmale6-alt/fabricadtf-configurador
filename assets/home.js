@@ -21,8 +21,26 @@
     root.addEventListener("mouseleave", play);
     show(0); play();
   }
+  function initCountdown() {
+    var el = document.getElementById("fhCd");
+    if (!el) return;
+    var boxes = el.querySelectorAll("b");
+    if (boxes.length < 3) return;
+    function pad(n) { return (n < 10 ? "0" : "") + n; }
+    function tick() {
+      var now = new Date();
+      var end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+      var s = Math.max(0, Math.floor((end - now) / 1000));
+      boxes[0].textContent = pad(Math.floor(s / 3600));
+      boxes[1].textContent = pad(Math.floor((s % 3600) / 60));
+      boxes[2].textContent = pad(s % 60);
+    }
+    tick();
+    setInterval(tick, 1000);
+  }
   function boot() {
     document.querySelectorAll(".fdtf-home .fh-hero").forEach(initSlider);
+    initCountdown();
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
   else boot();

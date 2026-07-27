@@ -336,6 +336,10 @@ class FDTF_Plugin {
 		$logo     = FDTF_URL . 'assets/brand/logo.png';
 		$roll     = FDTF_URL . 'assets/dtf-images/dtf-roll-1.jpg';
 		$phone    = '+351 937 661 849';
+		$editor   = home_url( '/editor/' );
+		$blog_pid = intval( get_option( 'page_for_posts' ) );
+		$blog_url = $blog_pid ? get_permalink( $blog_pid ) : home_url( '/blog/' );
+		$posts    = get_posts( array( 'numberposts' => 4, 'post_status' => 'publish' ) );
 
 		// --- data ---------------------------------------------------------
 		$cats = array(
@@ -371,6 +375,17 @@ class FDTF_Plugin {
 		ob_start();
 		?>
 <div class="fdtf-home">
+
+  <!-- TOP BAR / COUNTDOWN -->
+  <div class="fh-topbar">
+    <div class="fh-tb-in">
+      <div class="fh-tb-left">Envia HOJE se encomendar em:
+        <span class="fh-cd" id="fhCd" aria-hidden="true"><b>00</b>:<b>00</b>:<b>00</b></span>
+      </div>
+      <div class="fh-tb-right">Envio grátis em encomendas acima de 150€</div>
+    </div>
+  </div>
+
   <div class="fh-wrap">
 
     <!-- HERO -->
@@ -412,7 +427,7 @@ class FDTF_Plugin {
   </div>
 
   <!-- CATEGORIES -->
-  <section class="fh-sec">
+  <section class="fh-sec fh-cats-sec">
     <div class="fh-wrap">
       <div class="fh-cats">
         <?php foreach ( $cats as $c ) : ?>
@@ -467,7 +482,7 @@ class FDTF_Plugin {
             <b>Encomenda simples</b><span>Escolha os metros, envie a arte e nós tratamos do resto.</span>
             <b>Preços por escalão</b><span>Quanto maior a folha, mais barato fica ao metro.</span>
           </div>
-          <a class="fh-btn navy" href="<?php echo esc_url( $dtf_url ); ?>">Encomendar DTF a metro</a>
+          <a class="fh-btn navy" href="<?php echo esc_url( $editor ); ?>">Abrir editor e crie a sua folha</a>
         </div>
       </div>
     </div>
@@ -503,6 +518,38 @@ class FDTF_Plugin {
       </div>
     </div>
   </section>
+
+  <?php if ( ! empty( $posts ) ) : ?>
+  <!-- BLOG -->
+  <section class="fh-sec tint">
+    <div class="fh-wrap">
+      <div class="fh-bloghead">
+        <h2 class="fh-title fh-blogtitle">Blog</h2>
+        <a class="fh-blogall" href="<?php echo esc_url( $blog_url ); ?>">Ver todos →</a>
+      </div>
+      <div class="fh-blog">
+        <?php foreach ( $posts as $p ) :
+          $thumb = get_the_post_thumbnail_url( $p->ID, 'medium_large' );
+          $purl  = get_permalink( $p->ID );
+        ?>
+        <a class="fh-post" href="<?php echo esc_url( $purl ); ?>">
+          <div class="fh-postimg">
+            <?php if ( $thumb ) : ?>
+              <img src="<?php echo esc_url( $thumb ); ?>" alt="<?php echo esc_attr( get_the_title( $p->ID ) ); ?>" loading="lazy">
+            <?php else : ?>
+              <span class="fh-emoji">📝</span>
+            <?php endif; ?>
+          </div>
+          <div class="fh-postbody">
+            <span class="fh-postdate"><?php echo esc_html( get_the_date( 'j M Y', $p->ID ) ); ?></span>
+            <h3><?php echo esc_html( get_the_title( $p->ID ) ); ?></h3>
+          </div>
+        </a>
+        <?php endforeach; ?>
+      </div>
+    </div>
+  </section>
+  <?php endif; ?>
 
   <!-- CTA -->
   <section class="fh-sec">
