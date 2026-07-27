@@ -36,12 +36,31 @@ class FDTF_Plugin {
 		add_action( 'wp_enqueue_scripts', array( $this, 'register_assets' ) );
 		// Countdown announcement bar at the very top of the homepage.
 		add_action( 'wp_body_open', array( $this, 'render_top_bar' ) );
+		// Dark-blue main navigation bar with white links (site-wide header).
+		add_action( 'wp_head', array( $this, 'print_header_css' ), 99 );
 		// Send the old "DTF a Metro" product page to the new redesigned page.
 		add_action( 'template_redirect', array( $this, 'maybe_redirect_old_dtf' ) );
 		// Load a translations file if present.
 		add_action( 'init', function () {
 			load_plugin_textdomain( 'fabricadtf-configurador', false, dirname( plugin_basename( FDTF_FILE ) ) . '/languages' );
 		} );
+	}
+
+	/**
+	 * Paint the main navigation bar dark blue with white links, matching the
+	 * homepage design. The desktop nav is its own Elementor top-section
+	 * (elementor-element-2572e95, hidden on tablet/mobile where a burger menu is
+	 * used instead), so this only affects the desktop header row.
+	 */
+	public function print_header_css() {
+		if ( is_admin() ) {
+			return;
+		}
+		echo '<style id="fh-nav-css">'
+			. '.elementor-element-2572e95{background-color:#0b1a5b !important}'
+			. '.elementor-element-2572e95 .menu-item>a,.elementor-element-2572e95 .elementor-item{color:#fff !important}'
+			. '.elementor-element-2572e95 .menu-item>a:hover,.elementor-element-2572e95 .elementor-item:hover,.elementor-element-2572e95 .current-menu-item>a,.elementor-element-2572e95 .current_page_item>a,.elementor-element-2572e95 .elementor-item.elementor-item-active{color:#fff !important;opacity:.82}'
+			. '</style>';
 	}
 
 	/**
