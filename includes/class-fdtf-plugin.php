@@ -200,7 +200,13 @@ class FDTF_Plugin {
 		do_action( 'litespeed_control_set_nocache', 'FabricaDTF DTF a metro (nonce por pedido)' );
 		add_filter( 'litespeed_control_cacheable', '__return_false', 99 );
 
-		return '<div class="fdtf-dtf"></div>';
+		// Server-rendered H1 for SEO (the visible title is built by JS as an <h2>).
+		$seo_title = get_the_title();
+		if ( '' === $seo_title ) {
+			$cfg       = $this->build_dtf_config();
+			$seo_title = isset( $cfg['title'] ) ? $cfg['title'] : 'Transferências DTF a metro';
+		}
+		return '<h1 class="fdtf-dtf-seo-h1">' . esc_html( $seo_title ) . '</h1><div class="fdtf-dtf"></div>';
 	}
 
 	/**

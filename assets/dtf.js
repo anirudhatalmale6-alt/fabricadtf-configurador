@@ -66,7 +66,7 @@
 
     // ---- RIGHT: buy box ----
     var buy = el('<div class="fd-buy"></div>');
-    buy.appendChild(el('<h1>' + esc(CFG.title || "DTF a Metro") + '</h1>'));
+    buy.appendChild(el('<h2 class="fd-ptitle">' + esc(CFG.title || "DTF a Metro") + '</h2>'));
 
     var full = Math.round(CFG.rating || 5);
     var stars = ""; for (var i = 0; i < 5; i++) stars += (i < full ? "★" : "☆");
