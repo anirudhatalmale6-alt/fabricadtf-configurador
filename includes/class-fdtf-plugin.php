@@ -393,7 +393,7 @@ class FDTF_Plugin {
 		$roll     = FDTF_URL . 'assets/dtf-images/dtf-roll-1.jpg';
 		$img      = FDTF_URL . 'assets/home/';
 		$phone    = '+351 937 661 849';
-		$editor   = home_url( '/editor/' );
+		$editor   = home_url( '/product/gang-sheet/' );
 		$blog_pid = intval( get_option( 'page_for_posts' ) );
 		$blog_url = $blog_pid ? get_permalink( $blog_pid ) : home_url( '/blog/' );
 		$posts    = get_posts( array( 'numberposts' => 4, 'post_status' => 'publish' ) );
