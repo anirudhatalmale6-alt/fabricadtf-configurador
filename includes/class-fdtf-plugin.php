@@ -425,11 +425,11 @@ class FDTF_Plugin {
 		$faq = array(
 			array( 'O que é uma transferência DTF?', 'DTF (Direct to Film) é uma técnica em que o desenho é impresso numa película especial e depois transferido para o tecido com calor e pressão. Adere a praticamente qualquer tecido, com cores vivas e grande durabilidade.' ),
 			array( 'Qual é a encomenda mínima?', 'Nas transferências DTF a metro não há mínimos: pode encomendar a partir de 1 metro linear. Nas t-shirts personalizadas a encomenda mínima é de 5 unidades.' ),
-			array( 'Que tipo de prensa preciso?', 'Uma prensa térmica plana. Aplique a cerca de 150–160 °C, com pressão média, durante 10 a 15 segundos. Também funciona com prensa de caneca ou boné para superfícies adequadas.' ),
-			array( 'Que tamanhos estão disponíveis?', 'As transferências DTF são vendidas a metro (largura de rolo fixa), por isso escolhe o comprimento que precisar. Para impressões em peças, temos tamanhos de A7 até A3.' ),
-			array( 'Como resistem à lavagem?', 'Com a aplicação correta, as transferências DTF aguentam mais de 50 lavagens sem estalar nem desbotar. Lave do avesso, a 30 °C, e evite secador muito quente.' ),
+			array( 'Que tipo de prensa preciso?', 'Uma prensa térmica plana. Aplique a cerca de 150–160 °C, com pressão média, durante 10 a 15 segundos. Também funciona com prensa de boné para superfícies adequadas.' ),
+			array( 'Que tamanhos estão disponíveis?', 'As transferências DTF são vendidas a metro (largura de rolo 57cm), por isso escolhe o comprimento que precisar.' ),
+			array( 'Como resistem à lavagem?', 'Com a aplicação correta, as transferências DTF aguentam mais de 50 lavagens sem estalar nem desbotar. Lave do avesso, a 30 °C, e evite secador.' ),
 			array( 'Com que rapidez recebo a encomenda?', 'Produzimos no próprio dia sempre que possível. O envio para Portugal Continental demora normalmente 1 a 2 dias úteis. Portes grátis em encomendas acima de 150€.' ),
-			array( 'Que formato de ficheiro devo enviar?', 'De preferência PNG com fundo transparente em alta resolução (300 dpi), ou PDF. Também aceitamos JPG. Se o ficheiro for grande, pode enviar o link do WeTransfer nas notas da encomenda.' ),
+			array( 'Que formato de ficheiro devo enviar?', 'De preferência PNG com fundo transparente em alta resolução (300 dpi), ou PDF. Se o ficheiro for grande, pode enviar o link do WeTransfer nas notas da encomenda.' ),
 			array( 'Qual é a política de reembolso?', 'Como cada transferência é personalizada, não aceitamos devoluções por desistência. Se houver algum defeito de impressão da nossa parte, reimprimimos ou reembolsamos sem custos.' ),
 			array( 'É possível cancelar uma encomenda?', 'Sim, desde que a produção ainda não tenha começado. Contacte-nos o quanto antes pelo telefone ou pelo formulário de contacto.' ),
 		);
