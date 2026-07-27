@@ -88,12 +88,12 @@ class FDTF_Plugin {
 </style>
 <div id="fhTopbar" role="complementary" aria-label="Aviso de envio">
   <div class="fh-tb-in">
-    <div>Envia HOJE se encomendar em: <span class="fh-cd" id="fhCdTop" aria-hidden="true"><b>00</b>:<b>00</b>:<b>00</b></span></div>
+    <div>Será enviado amanhã se o pedido for feito em: <span class="fh-cd" id="fhCdTop" aria-hidden="true"><b>00</b>:<b>00</b>:<b>00</b></span></div>
     <div>Envio grátis em encomendas acima de 150€</div>
   </div>
 </div>
 <script>
-(function(){var el=document.getElementById("fhCdTop");if(!el)return;var b=el.querySelectorAll("b");function p(n){return(n<10?"0":"")+n;}function t(){var n=new Date(),e=new Date(n.getFullYear(),n.getMonth(),n.getDate(),23,59,59),s=Math.max(0,Math.floor((e-n)/1000));b[0].textContent=p(Math.floor(s/3600));b[1].textContent=p(Math.floor(s%3600/60));b[2].textContent=p(s%60);}t();setInterval(t,1000);})();
+(function(){var el=document.getElementById("fhCdTop");if(!el)return;var b=el.querySelectorAll("b");function p(n){return(n<10?"0":"")+n;}var fmt;try{fmt=new Intl.DateTimeFormat("en-GB",{timeZone:"Europe/Lisbon",hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:false});}catch(e){fmt=null;}function t(){var h,m,s;if(fmt){var pr=fmt.formatToParts(new Date());h=m=s=0;for(var i=0;i<pr.length;i++){var v=pr[i];if(v.type==="hour")h=+v.value;else if(v.type==="minute")m=+v.value;else if(v.type==="second")s=+v.value;}}else{var n=new Date();h=n.getHours();m=n.getMinutes();s=n.getSeconds();}h=h%24;var cur=h*3600+m*60+s,cut=9*3600,r=cur<cut?cut-cur:86400-cur+cut;b[0].textContent=p(Math.floor(r/3600));b[1].textContent=p(Math.floor(r%3600/60));b[2].textContent=p(r%60);}t();setInterval(t,1000);})();
 </script>
 		<?php
 	}
