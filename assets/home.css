@@ -62,7 +62,8 @@
 
 /* reviews */
 .fdtf-home .fh-gbadge{display:inline-flex;align-items:center;gap:12px;background:#fff;border:1px solid var(--fh-line);border-radius:14px;padding:12px 16px;box-shadow:var(--fh-shadow);margin:0 auto 26px}
-.fdtf-home .fh-gbadge .fh-gicon{width:44px;height:44px;border-radius:50%;background:var(--fh-navy);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;text-align:center;line-height:1}
+.fdtf-home .fh-gbadge .fh-gicon{height:40px;display:flex;align-items:center;justify-content:center}
+.fdtf-home .fh-gbadge .fh-gicon img{height:40px;width:auto;max-width:130px;object-fit:contain}
 .fdtf-home .fh-gbadge b{font-size:18px;color:var(--fh-navy)}
 .fdtf-home .fh-stars{color:#f5a623;letter-spacing:1px}
 .fdtf-home .fh-gbadge small{display:block;color:var(--fh-muted);font-size:12.5px}

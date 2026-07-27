@@ -341,7 +341,7 @@ class FDTF_Plugin {
 		$cats = array(
 			array( 'TRANSFERÊNCIAS DTF', $roll, '', 'Ver DTF', $dtf_url ),
 			array( 'AUTOCOLANTES UV', '', '🏷️', 'Ver Autocolantes', $shop_url ),
-			array( 'VESTUÁRIO EM BRANCO', '', '👕', 'Ver Vestuário', $shop_url ),
+			array( 'PACOTES DE DTF', '', '📦', 'Ver Pacotes', $shop_url ),
 			array( 'T-SHIRT PERSONALIZADA', '', '🎨', 'Ver Personalizadas', $conf_url ),
 		);
 		$reviews = array(
@@ -436,7 +436,7 @@ class FDTF_Plugin {
   <section class="fh-sec tint">
     <div class="fh-wrap" style="text-align:center">
       <div class="fh-gbadge">
-        <span class="fh-gicon">FÁBRICA DTF</span>
+        <span class="fh-gicon"><img src="<?php echo esc_url( $logo ); ?>" alt="Logótipo Fábrica DTF"></span>
         <span><b>4,9</b> <span class="fh-stars"><?php echo $stars; ?></span><small>216 avaliações no Google</small></span>
       </div>
       <div class="fh-reviews">
