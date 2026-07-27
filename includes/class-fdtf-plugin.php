@@ -277,6 +277,8 @@ class FDTF_Plugin {
 			'production'   => $production,
 			'ajaxUrl'      => admin_url( 'admin-ajax.php' ),
 			'nonce'        => wp_create_nonce( 'fdtf_nonce' ),
+			'logoUrl'      => FDTF_URL . 'assets/brand/logo.png',
+			'siteLabel'    => preg_replace( '#^https?://#', '', untrailingslashit( home_url() ) ),
 		);
 	}
 

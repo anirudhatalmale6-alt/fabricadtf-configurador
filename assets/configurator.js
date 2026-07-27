@@ -385,19 +385,38 @@
   function downloadMockup(btn) {
     var orig = btn ? btn.textContent : "";
     if (btn) { btn.disabled = true; btn.textContent = t("mockup_wait", "A gerar mockup…"); }
-    Promise.all([renderViewCanvas("front"), renderViewCanvas("back")]).then(function (cvs) {
-      var f = cvs[0], b = cvs[1];
+    Promise.all([renderViewCanvas("front"), renderViewCanvas("back"), loadImage(CFG.logoUrl)]).then(function (cvs) {
+      var f = cvs[0], b = cvs[1], logo = cvs[2];
       var pad = 24, gap = 24, labelH = 34;
       var W = pad + f.width + gap + b.width + pad;
-      var H = pad + labelH + Math.max(f.height, b.height) + pad;
+      // Branded header (logo) + footer (site address).
+      var logoH = 0, logoW = 0, headerH = 0;
+      if (logo && logo.naturalWidth) {
+        logoH = 132;
+        logoW = Math.round(logo.naturalWidth * (logoH / logo.naturalHeight));
+        if (logoW > W - 2 * pad) { logoW = W - 2 * pad; logoH = Math.round(logo.naturalHeight * (logoW / logo.naturalWidth)); }
+        headerH = logoH + 18;
+      }
+      var siteLabel = CFG.siteLabel || "";
+      var footerH = siteLabel ? 52 : 0;
+      var H = pad + headerH + labelH + Math.max(f.height, b.height) + pad + footerH;
       var cv = document.createElement("canvas"); cv.width = W; cv.height = H;
       var ctx = cv.getContext("2d");
       ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, W, H);
+      if (logo && logoW) { ctx.drawImage(logo, Math.round((W - logoW) / 2), pad, logoW, logoH); }
+      var topY = pad + headerH;
       ctx.fillStyle = "#0b1a5b"; ctx.font = "bold 20px Arial, sans-serif"; ctx.textAlign = "center";
-      ctx.fillText(t("view_front", "Frente"), pad + f.width / 2, pad + labelH - 10);
-      ctx.fillText(t("view_back", "Costas"), pad + f.width + gap + b.width / 2, pad + labelH - 10);
-      ctx.drawImage(f, pad, pad + labelH);
-      ctx.drawImage(b, pad + f.width + gap, pad + labelH);
+      ctx.fillText(t("view_front", "Frente"), pad + f.width / 2, topY + labelH - 10);
+      ctx.fillText(t("view_back", "Costas"), pad + f.width + gap + b.width / 2, topY + labelH - 10);
+      ctx.drawImage(f, pad, topY + labelH);
+      ctx.drawImage(b, pad + f.width + gap, topY + labelH);
+      if (siteLabel) {
+        var fy = H - footerH;
+        ctx.strokeStyle = "#e6e9f5"; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(pad, fy + 6); ctx.lineTo(W - pad, fy + 6); ctx.stroke();
+        ctx.fillStyle = "#0b1a5b"; ctx.font = "bold 18px Arial, sans-serif"; ctx.textAlign = "center";
+        ctx.fillText(siteLabel, W / 2, fy + 34);
+      }
       var url;
       try { url = cv.toDataURL("image/png"); }
       catch (e) { alert(t("mockup_err", "Não foi possível gerar o mockup. Tenta novamente.")); if (btn) { btn.disabled = false; btn.textContent = orig; } return; }
