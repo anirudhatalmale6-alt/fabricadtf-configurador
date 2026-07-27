@@ -32,6 +32,7 @@ class FDTF_Plugin {
 
 		add_shortcode( 'fabricadtf_configurador', array( $this, 'shortcode' ) );
 		add_shortcode( 'fabricadtf_dtf', array( $this, 'shortcode_dtf' ) );
+		add_shortcode( 'fabricadtf_home', array( $this, 'shortcode_home' ) );
 		add_action( 'wp_enqueue_scripts', array( $this, 'register_assets' ) );
 		// Send the old "DTF a Metro" product page to the new redesigned page.
 		add_action( 'template_redirect', array( $this, 'maybe_redirect_old_dtf' ) );
@@ -73,6 +74,8 @@ class FDTF_Plugin {
 		wp_register_script( 'fdtf-configurador', FDTF_URL . 'assets/configurator.js', array(), FDTF_VERSION, true );
 		wp_register_style( 'fdtf-dtf', FDTF_URL . 'assets/dtf.css', array(), FDTF_VERSION );
 		wp_register_script( 'fdtf-dtf', FDTF_URL . 'assets/dtf.js', array(), FDTF_VERSION, true );
+		wp_register_style( 'fdtf-home', FDTF_URL . 'assets/home.css', array(), FDTF_VERSION );
+		wp_register_script( 'fdtf-home', FDTF_URL . 'assets/home.js', array(), FDTF_VERSION, true );
 	}
 
 	/**
@@ -307,5 +310,230 @@ class FDTF_Plugin {
 		);
 
 		return '<div class="fdtf-config"></div>';
+	}
+
+	/**
+	 * Shortcode handler: [fabricadtf_home] — full redesigned homepage.
+	 * Server-rendered HTML (SEO-friendly: single H1, section H2s, FAQPage schema).
+	 */
+	public function shortcode_home( $atts ) {
+		wp_enqueue_style( 'fdtf-home' );
+		wp_enqueue_script( 'fdtf-home' );
+		return $this->build_home_html();
+	}
+
+	/**
+	 * Build the redesigned homepage markup.
+	 *
+	 * @return string
+	 */
+	private function build_home_html() {
+		$dtf_page = intval( get_option( 'fdtf_dtf_prod_page_id' ) );
+		$dtf_url  = $dtf_page ? get_permalink( $dtf_page ) : home_url( '/dtf-a-metro/' );
+		$conf_url = home_url( '/personalizar-t-shirt/' );
+		$shop_url = function_exists( 'wc_get_page_permalink' ) ? wc_get_page_permalink( 'shop' ) : home_url( '/loja/' );
+		$contact  = home_url( '/contato/' );
+		$logo     = FDTF_URL . 'assets/brand/logo.png';
+		$roll     = FDTF_URL . 'assets/dtf-images/dtf-roll-1.jpg';
+		$phone    = '+351 937 661 849';
+
+		// --- data ---------------------------------------------------------
+		$cats = array(
+			array( 'TRANSFERÊNCIAS DTF', $roll, '', 'Ver DTF', $dtf_url ),
+			array( 'AUTOCOLANTES UV', '', '🏷️', 'Ver Autocolantes', $shop_url ),
+			array( 'VESTUÁRIO EM BRANCO', '', '👕', 'Ver Vestuário', $shop_url ),
+			array( 'T-SHIRT PERSONALIZADA', '', '🎨', 'Ver Personalizadas', $conf_url ),
+		);
+		$reviews = array(
+			array( 'Ana Ferreira', 'há 3 meses', 'A FabricaDTF é rápida e de excelente qualidade. Enviei ao final do dia e no dia seguinte já estava pronto para levantar. Atendimento incrível.' ),
+			array( 'Michelle Bastos', 'há 3 meses', 'Quando temos um grande fornecedor, para quê mudar? Os melhores em Lisboa! Qualidade e serviço rápido — sempre entregam. Qualidade INIGUALÁVEL!' ),
+			array( 'Miguel Fontes', 'há 12 dias', 'Acabei de receber os meus DTF personalizados, muito grato por vos ter encontrado. As impressões estão lindas, obrigado! Vou voltar a encomendar.' ),
+			array( 'Melissa Gouveia', 'há 2 meses', 'Já é o meu sítio favorito para DTF. Melhor preço da cidade e melhor qualidade. Equipa simpática. Recomendo sem hesitar!' ),
+		);
+		$steps = array(
+			array( '<path d="M12 15V3m0 0L8 7m4-4 4 4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/>', 'Faça Upload e Encomende', 'Carregue a sua arte ou gang sheet e faça a encomenda em segundos, poupando tempo.' ),
+			array( '<path d="M12 2 2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>', 'Transferências DTF Premium', 'Eleve os seus projetos com transferências DTF premium e cores vibrantes.' ),
+			array( '<path d="M12 2s5 4 5 9a5 5 0 01-10 0c0-2 1-3 1-3s0 2 2 2c0-3 2-5 2-8z"/>', 'Prensa Térmica e Descole', 'Aplique pressão média durante 10 a 15 segundos. Descole e está pronto.' ),
+		);
+		$faq = array(
+			array( 'O que é uma transferência DTF?', 'DTF (Direct to Film) é uma técnica em que o desenho é impresso numa película especial e depois transferido para o tecido com calor e pressão. Adere a praticamente qualquer tecido, com cores vivas e grande durabilidade.' ),
+			array( 'Qual é a encomenda mínima?', 'Nas transferências DTF a metro não há mínimos: pode encomendar a partir de 1 metro linear. Nas t-shirts personalizadas a encomenda mínima é de 5 unidades.' ),
+			array( 'Que tipo de prensa preciso?', 'Uma prensa térmica plana. Aplique a cerca de 150–160 °C, com pressão média, durante 10 a 15 segundos. Também funciona com prensa de caneca ou boné para superfícies adequadas.' ),
+			array( 'Que tamanhos estão disponíveis?', 'As transferências DTF são vendidas a metro (largura de rolo fixa), por isso escolhe o comprimento que precisar. Para impressões em peças, temos tamanhos de A7 até A3.' ),
+			array( 'Como resistem à lavagem?', 'Com a aplicação correta, as transferências DTF aguentam mais de 50 lavagens sem estalar nem desbotar. Lave do avesso, a 30 °C, e evite secador muito quente.' ),
+			array( 'Com que rapidez recebo a encomenda?', 'Produzimos no próprio dia sempre que possível. O envio para Portugal Continental demora normalmente 1 a 2 dias úteis. Portes grátis em encomendas acima de 150€.' ),
+			array( 'Que formato de ficheiro devo enviar?', 'De preferência PNG com fundo transparente em alta resolução (300 dpi), ou PDF. Também aceitamos JPG. Se o ficheiro for grande, pode enviar o link do WeTransfer nas notas da encomenda.' ),
+			array( 'Qual é a política de reembolso?', 'Como cada transferência é personalizada, não aceitamos devoluções por desistência. Se houver algum defeito de impressão da nossa parte, reimprimimos ou reembolsamos sem custos.' ),
+			array( 'É possível cancelar uma encomenda?', 'Sim, desde que a produção ainda não tenha começado. Contacte-nos o quanto antes pelo telefone ou pelo formulário de contacto.' ),
+		);
+
+		$stars = '★★★★★';
+		ob_start();
+		?>
+<div class="fdtf-home">
+  <div class="fh-wrap">
+
+    <!-- HERO -->
+    <section class="fh-hero" aria-label="Destaques">
+      <div class="fh-slides">
+        <div class="fh-slide on">
+          <div class="fh-copy">
+            <h1>Transferências DTF premium, impressas no próprio dia</h1>
+            <p>A tua imaginação, a nossa impressão. Cores vibrantes e entrega rápida em todo o Portugal.</p>
+            <a class="fh-btn" href="<?php echo esc_url( $dtf_url ); ?>">Encomendar DTF a metro</a>
+          </div>
+          <div class="fh-media"><img src="<?php echo esc_url( $roll ); ?>" alt="Rolo de transferências DTF Fábrica DTF" loading="eager"></div>
+        </div>
+        <div class="fh-slide">
+          <div class="fh-copy">
+            <div class="fh-h">Portes grátis em encomendas superiores a 150€</div>
+            <p>Aproveite e encomende já as suas transferências DTF e t-shirts personalizadas.</p>
+            <a class="fh-btn navy" href="<?php echo esc_url( $shop_url ); ?>">Ver loja</a>
+          </div>
+          <div class="fh-media"><img src="<?php echo esc_url( $logo ); ?>" alt="Logótipo Fábrica DTF" loading="lazy"></div>
+        </div>
+        <div class="fh-slide">
+          <div class="fh-copy">
+            <div class="fh-h">Dê força à sua marca</div>
+            <p>Destaque-se com impressão DTF e t-shirts personalizadas de qualidade profissional.</p>
+            <a class="fh-btn" href="<?php echo esc_url( $conf_url ); ?>">Personalizar t-shirt</a>
+          </div>
+          <div class="fh-media"><img src="<?php echo esc_url( $logo ); ?>" alt="Fábrica DTF — a tua imaginação, a nossa impressão" loading="lazy"></div>
+        </div>
+      </div>
+      <button class="fh-arrow prev" type="button" aria-label="Anterior">‹</button>
+      <button class="fh-arrow next" type="button" aria-label="Seguinte">›</button>
+      <div class="fh-dots">
+        <button class="on" type="button" aria-label="Slide 1"></button>
+        <button type="button" aria-label="Slide 2"></button>
+        <button type="button" aria-label="Slide 3"></button>
+      </div>
+    </section>
+  </div>
+
+  <!-- CATEGORIES -->
+  <section class="fh-sec">
+    <div class="fh-wrap">
+      <div class="fh-cats">
+        <?php foreach ( $cats as $c ) : ?>
+        <div class="fh-cat">
+          <h3><?php echo esc_html( $c[0] ); ?></h3>
+          <div class="fh-catimg">
+            <?php if ( $c[1] ) : ?>
+              <img src="<?php echo esc_url( $c[1] ); ?>" alt="<?php echo esc_attr( $c[0] ); ?>" loading="lazy">
+            <?php else : ?>
+              <span class="fh-emoji"><?php echo esc_html( $c[2] ); ?></span>
+            <?php endif; ?>
+          </div>
+          <a class="fh-catbtn" href="<?php echo esc_url( $c[4] ); ?>"><?php echo esc_html( $c[3] ); ?></a>
+        </div>
+        <?php endforeach; ?>
+      </div>
+    </div>
+  </section>
+
+  <!-- REVIEWS -->
+  <section class="fh-sec tint">
+    <div class="fh-wrap" style="text-align:center">
+      <div class="fh-gbadge">
+        <span class="fh-gicon">FÁBRICA DTF</span>
+        <span><b>4,9</b> <span class="fh-stars"><?php echo $stars; ?></span><small>216 avaliações no Google</small></span>
+      </div>
+      <div class="fh-reviews">
+        <?php foreach ( $reviews as $r ) : ?>
+        <div class="fh-rev">
+          <div class="fh-revhead">
+            <span class="fh-av"><?php echo esc_html( mb_substr( $r[0], 0, 1 ) ); ?></span>
+            <span><span class="fh-nm"><?php echo esc_html( $r[0] ); ?></span><br><span class="fh-when"><?php echo esc_html( $r[1] ); ?></span></span>
+          </div>
+          <div class="fh-stars"><?php echo $stars; ?></div>
+          <p><?php echo esc_html( $r[2] ); ?></p>
+        </div>
+        <?php endforeach; ?>
+      </div>
+    </div>
+  </section>
+
+  <!-- GANG SHEETS -->
+  <section class="fh-sec">
+    <div class="fh-wrap">
+      <div class="fh-gang">
+        <div class="fh-gimg"><span class="fh-gph">CRIE A SUA<br>FOLHA DTF!</span></div>
+        <div>
+          <h2>Maximize o seu lucro com Gang Sheets personalizadas</h2>
+          <p class="fh-glead">Deixe de pagar por design. Coloque os logos, gráficos e etiquetas que quiser numa única folha e pague um preço baixo por metro.</p>
+          <div class="fh-gfeat">
+            <b>Cores ilimitadas</b><span>Gradientes e fotos a cores completas, sem custos de setup.</span>
+            <b>Encomenda simples</b><span>Escolha os metros, envie a arte e nós tratamos do resto.</span>
+            <b>Preços por escalão</b><span>Quanto maior a folha, mais barato fica ao metro.</span>
+          </div>
+          <a class="fh-btn navy" href="<?php echo esc_url( $dtf_url ); ?>">Encomendar DTF a metro</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROCESS -->
+  <section class="fh-sec navy">
+    <div class="fh-wrap">
+      <h2 class="fh-title">Processo de encomenda e aplicação DTF</h2>
+      <div class="fh-steps">
+        <?php foreach ( $steps as $s ) : ?>
+        <div class="fh-step">
+          <div class="fh-sic"><svg viewBox="0 0 24 24" aria-hidden="true"><?php echo $s[0]; ?></svg></div>
+          <h3><?php echo esc_html( $s[1] ); ?></h3>
+          <p><?php echo esc_html( $s[2] ); ?></p>
+        </div>
+        <?php endforeach; ?>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="fh-sec tint">
+    <div class="fh-wrap">
+      <h2 class="fh-title">Perguntas frequentes</h2>
+      <div class="fh-faq">
+        <?php foreach ( $faq as $q ) : ?>
+        <details>
+          <summary><?php echo esc_html( $q[0] ); ?></summary>
+          <div class="fh-a"><?php echo esc_html( $q[1] ); ?></div>
+        </details>
+        <?php endforeach; ?>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="fh-sec">
+    <div class="fh-wrap">
+      <div class="fh-cta">
+        <h2>Pronto para imprimir as suas ideias?</h2>
+        <p>Transferências DTF a metro e t-shirts personalizadas, com produção no próprio dia.</p>
+        <a class="fh-btn" href="<?php echo esc_url( $dtf_url ); ?>">Começar agora</a>
+        &nbsp;
+        <a class="fh-btn navy" href="<?php echo esc_url( $contact ); ?>">Falar connosco</a>
+      </div>
+    </div>
+  </section>
+
+</div>
+<?php
+		// FAQPage structured data for Google rich results.
+		$faq_items = array();
+		foreach ( $faq as $q ) {
+			$faq_items[] = array(
+				'@type'          => 'Question',
+				'name'           => $q[0],
+				'acceptedAnswer' => array( '@type' => 'Answer', 'text' => $q[1] ),
+			);
+		}
+		$schema = array(
+			'@context'   => 'https://schema.org',
+			'@type'      => 'FAQPage',
+			'mainEntity' => $faq_items,
+		);
+		echo '<script type="application/ld+json">' . wp_json_encode( $schema ) . '</script>';
+		return ob_get_clean();
 	}
 }
