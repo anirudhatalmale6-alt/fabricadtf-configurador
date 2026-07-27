@@ -55,10 +55,11 @@
       left.appendChild(thumbs);
     }
 
-    if (CFG.detailsHtml || CFG.shippingHtml) {
+    if (CFG.detailsHtml || CFG.shippingHtml || CFG.requirementsHtml) {
       var acc = el('<div class="fd-acc"></div>');
       if (CFG.detailsHtml) acc.appendChild(el('<details open><summary>Detalhes do Produto</summary><div class="fd-body">' + CFG.detailsHtml + '</div></details>'));
       if (CFG.shippingHtml) acc.appendChild(el('<details><summary>Envio</summary><div class="fd-body">' + CFG.shippingHtml + '</div></details>'));
+      if (CFG.requirementsHtml) acc.appendChild(el('<details><summary>Requisitos para o DTF</summary><div class="fd-body">' + CFG.requirementsHtml + '</div></details>'));
       left.appendChild(acc);
     }
     grid.appendChild(left);

@@ -157,9 +157,35 @@ class FDTF_Settings {
 				),
 				'details_html' => '<p>Fornecemos Transferências DTF Personalizadas por Tamanho de alta qualidade para escalar o seu negócio de forma eficiente — detalhes nítidos e cores vivas em qualquer design, prontas para aplicar em várias peças com resultado profissional.</p><h4>Porquê escolher DTF por Tamanho</h4><p>A precisão é essencial na impressão têxtil moderna. Ao encomendar por tamanho evita filme desperdiçado e material em excesso — obtém as dimensões exatas do seu projeto, mantendo a produção rentável e organizada.</p>',
 				'shipping_html'=> '<p>Produção rápida e envio para todo o país. Envio grátis em encomendas acima de 99€. Os portes finais são calculados no checkout, conforme o método de envio já configurado na loja.</p>',
+				'requirements_html' => self::default_requirements_html(),
 				'images'       => array( FDTF_URL . 'assets/dtf-images/dtf-roll-1.jpg' ),
 			),
 		);
+	}
+
+	/**
+	 * Default HTML for the "Requisitos para o DTF" product accordion.
+	 *
+	 * @return string
+	 */
+	public static function default_requirements_html() {
+		return '<p>Para obter a melhor qualidade de impressão, faça o upload de um ficheiro PNG de alta resolução com fundo transparente.</p>'
+			. '<h4>Especificações recomendadas para a obra de arte:</h4>'
+			. '<ul>'
+			. '<li>Deve ser CMYK</li>'
+			. '<li>Deve ter fundo transparente.</li>'
+			. '<li>Pelo menos 300 DPI</li>'
+			. '<li>Versão PNG</li>'
+			. '<li>Arte finalizada no tamanho de impressão desejado.</li>'
+			. '<li>Bordas nítidas e limpas</li>'
+			. '<li>Texto claro e legível</li>'
+			. '<li>Sem espaços transparentes desnecessários ao redor do desenho.</li>'
+			. '<li>Sem imagens desfocadas, pixelizadas ou de baixa resolução.</li>'
+			. '</ul>'
+			. '<p>Remova qualquer fundo indesejado antes de enviar o seu ficheiro. Fundos brancos ou outros elementos de fundo visíveis podem ser impressos se estiverem incluídos na arte.</p>'
+			. '<p>A sua arte será dimensionada de acordo com as dimensões do produto selecionado. Certifique-se de que as proporções do seu design estão corretas antes de fazer o pedido.</p>'
+			. '<p>As cores exibidas em telefones, tablets e monitores podem variar ligeiramente em relação ao produto impresso final, devido a diferenças nas configurações do ecrã, perfis de cores, tintas, materiais e métodos de produção.</p>'
+			. '<p>Recomendamos que reveja a sua arte em tamanho real antes de enviar o pedido. A Fábrica DTF não se responsabiliza por problemas de qualidade causados por arte de baixa resolução, tamanho incorreto, desfocada, pixelizada ou preparada de forma inadequada.</p>';
 	}
 
 	/**

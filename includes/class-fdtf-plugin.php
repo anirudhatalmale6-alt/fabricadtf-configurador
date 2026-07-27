@@ -176,6 +176,7 @@ class FDTF_Plugin {
 			'guidelines'   => array_values( (array) ( isset( $dtf['guidelines'] ) ? $dtf['guidelines'] : array() ) ),
 			'detailsHtml'  => isset( $dtf['details_html'] ) ? $dtf['details_html'] : '',
 			'shippingHtml' => isset( $dtf['shipping_html'] ) ? $dtf['shipping_html'] : '',
+			'requirementsHtml' => ( isset( $dtf['requirements_html'] ) && '' !== $dtf['requirements_html'] ) ? $dtf['requirements_html'] : FDTF_Settings::default_requirements_html(),
 			'images'       => array_values( array_filter( (array) ( isset( $dtf['images'] ) ? $dtf['images'] : array() ) ) ),
 		);
 	}
