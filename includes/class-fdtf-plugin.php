@@ -34,12 +34,49 @@ class FDTF_Plugin {
 		add_shortcode( 'fabricadtf_dtf', array( $this, 'shortcode_dtf' ) );
 		add_shortcode( 'fabricadtf_home', array( $this, 'shortcode_home' ) );
 		add_action( 'wp_enqueue_scripts', array( $this, 'register_assets' ) );
+		// Countdown announcement bar at the very top of the homepage.
+		add_action( 'wp_body_open', array( $this, 'render_top_bar' ) );
 		// Send the old "DTF a Metro" product page to the new redesigned page.
 		add_action( 'template_redirect', array( $this, 'maybe_redirect_old_dtf' ) );
 		// Load a translations file if present.
 		add_action( 'init', function () {
 			load_plugin_textdomain( 'fabricadtf-configurador', false, dirname( plugin_basename( FDTF_FILE ) ) . '/languages' );
 		} );
+	}
+
+	/**
+	 * Print the dark-blue countdown announcement bar at the very top of the page
+	 * (above the theme header) on the homepage, and hide the theme's own static
+	 * free-shipping strip so the message is not duplicated. Self-contained inline
+	 * style + script so it renders correctly even before the enqueued assets load.
+	 */
+	public function render_top_bar() {
+		if ( is_admin() || ! is_singular() ) {
+			return;
+		}
+		$post = get_post();
+		if ( ! $post || ! has_shortcode( $post->post_content, 'fabricadtf_home' ) ) {
+			return;
+		}
+		?>
+<style id="fh-topbar-css">
+.elementor-element-75e2ade{display:none !important}
+#fhTopbar{background:#0b1a5b;color:#fff;font-size:14px;font-weight:700;line-height:1.3}
+#fhTopbar .fh-tb-in{max-width:1200px;margin:0 auto;padding:9px 18px;display:flex;flex-wrap:wrap;gap:6px 22px;align-items:center;justify-content:center;text-align:center}
+#fhTopbar .fh-cd{display:inline-flex;gap:5px;margin-left:6px;vertical-align:middle}
+#fhTopbar .fh-cd b{background:rgba(255,255,255,.16);border-radius:6px;padding:3px 7px;font-size:13.5px;font-variant-numeric:tabular-nums;min-width:26px;text-align:center}
+@media(max-width:640px){#fhTopbar{font-size:12.5px}#fhTopbar .fh-tb-in{gap:4px 14px}}
+</style>
+<div id="fhTopbar" role="complementary" aria-label="Aviso de envio">
+  <div class="fh-tb-in">
+    <div>Envia HOJE se encomendar em: <span class="fh-cd" id="fhCdTop" aria-hidden="true"><b>00</b>:<b>00</b>:<b>00</b></span></div>
+    <div>Envio grátis em encomendas acima de 150€</div>
+  </div>
+</div>
+<script>
+(function(){var el=document.getElementById("fhCdTop");if(!el)return;var b=el.querySelectorAll("b");function p(n){return(n<10?"0":"")+n;}function t(){var n=new Date(),e=new Date(n.getFullYear(),n.getMonth(),n.getDate(),23,59,59),s=Math.max(0,Math.floor((e-n)/1000));b[0].textContent=p(Math.floor(s/3600));b[1].textContent=p(Math.floor(s%3600/60));b[2].textContent=p(s%60);}t();setInterval(t,1000);})();
+</script>
+		<?php
 	}
 
 	/**
@@ -335,6 +372,7 @@ class FDTF_Plugin {
 		$contact  = home_url( '/contato/' );
 		$logo     = FDTF_URL . 'assets/brand/logo.png';
 		$roll     = FDTF_URL . 'assets/dtf-images/dtf-roll-1.jpg';
+		$img      = FDTF_URL . 'assets/home/';
 		$phone    = '+351 937 661 849';
 		$editor   = home_url( '/editor/' );
 		$blog_pid = intval( get_option( 'page_for_posts' ) );
@@ -344,9 +382,15 @@ class FDTF_Plugin {
 		// --- data ---------------------------------------------------------
 		$cats = array(
 			array( 'TRANSFERÊNCIAS DTF', $roll, '', 'Ver DTF', $dtf_url ),
-			array( 'AUTOCOLANTES UV', '', '🏷️', 'Ver Autocolantes', $shop_url ),
-			array( 'PACOTES DE DTF', '', '📦', 'Ver Pacotes', $shop_url ),
-			array( 'T-SHIRT PERSONALIZADA', '', '🎨', 'Ver Personalizadas', $conf_url ),
+			array( 'AUTOCOLANTES UV', $img . 'cat-uv.jpg', '', 'Ver Autocolantes', $shop_url ),
+			array( 'PACOTES DE DTF', $img . 'cat-pacotes.jpg', '', 'Ver Pacotes', $shop_url ),
+			array( 'T-SHIRT PERSONALIZADA', $img . 'cat-tshirt.jpg', '', 'Ver Personalizadas', $conf_url ),
+		);
+		$banners = array(
+			array( $img . 'banner-1.jpg', 'Portes grátis em encomendas superiores a 150€', $shop_url ),
+			array( $img . 'banner-2.jpg', 'Dê força à sua marca com impressão DTF premium', $conf_url ),
+			array( $img . 'banner-3.jpg', 'Imprima mais, pague menos — DTF a metro', $dtf_url ),
+			array( $img . 'banner-4.jpg', 'Cores vibrantes, detalhes nítidos — transferências DTF premium', $dtf_url ),
 		);
 		$reviews = array(
 			array( 'Ana Ferreira', 'há 3 meses', 'A FabricaDTF é rápida e de excelente qualidade. Enviei ao final do dia e no dia seguinte já estava pronto para levantar. Atendimento incrível.' ),
@@ -376,52 +420,24 @@ class FDTF_Plugin {
 		?>
 <div class="fdtf-home">
 
-  <!-- TOP BAR / COUNTDOWN -->
-  <div class="fh-topbar">
-    <div class="fh-tb-in">
-      <div class="fh-tb-left">Envia HOJE se encomendar em:
-        <span class="fh-cd" id="fhCd" aria-hidden="true"><b>00</b>:<b>00</b>:<b>00</b></span>
-      </div>
-      <div class="fh-tb-right">Envio grátis em encomendas acima de 150€</div>
-    </div>
-  </div>
-
   <div class="fh-wrap">
 
     <!-- HERO -->
+    <h1 class="fh-seo-h1">Transferências DTF premium e t-shirts personalizadas, impressas no próprio dia</h1>
     <section class="fh-hero" aria-label="Destaques">
       <div class="fh-slides">
-        <div class="fh-slide on">
-          <div class="fh-copy">
-            <h1>Transferências DTF premium, impressas no próprio dia</h1>
-            <p>A tua imaginação, a nossa impressão. Cores vibrantes e entrega rápida em todo o Portugal.</p>
-            <a class="fh-btn" href="<?php echo esc_url( $dtf_url ); ?>">Encomendar DTF a metro</a>
-          </div>
-          <div class="fh-media"><img src="<?php echo esc_url( $roll ); ?>" alt="Rolo de transferências DTF Fábrica DTF" loading="eager"></div>
-        </div>
-        <div class="fh-slide">
-          <div class="fh-copy">
-            <div class="fh-h">Portes grátis em encomendas superiores a 150€</div>
-            <p>Aproveite e encomende já as suas transferências DTF e t-shirts personalizadas.</p>
-            <a class="fh-btn navy" href="<?php echo esc_url( $shop_url ); ?>">Ver loja</a>
-          </div>
-          <div class="fh-media"><img src="<?php echo esc_url( $logo ); ?>" alt="Logótipo Fábrica DTF" loading="lazy"></div>
-        </div>
-        <div class="fh-slide">
-          <div class="fh-copy">
-            <div class="fh-h">Dê força à sua marca</div>
-            <p>Destaque-se com impressão DTF e t-shirts personalizadas de qualidade profissional.</p>
-            <a class="fh-btn" href="<?php echo esc_url( $conf_url ); ?>">Personalizar t-shirt</a>
-          </div>
-          <div class="fh-media"><img src="<?php echo esc_url( $logo ); ?>" alt="Fábrica DTF — a tua imaginação, a nossa impressão" loading="lazy"></div>
-        </div>
+        <?php foreach ( $banners as $bi => $bn ) : ?>
+        <a class="fh-slide<?php echo 0 === $bi ? ' on' : ''; ?>" href="<?php echo esc_url( $bn[2] ); ?>">
+          <img src="<?php echo esc_url( $bn[0] ); ?>" alt="<?php echo esc_attr( $bn[1] ); ?>"<?php echo 0 === $bi ? '' : ' loading="lazy"'; ?>>
+        </a>
+        <?php endforeach; ?>
       </div>
       <button class="fh-arrow prev" type="button" aria-label="Anterior">‹</button>
       <button class="fh-arrow next" type="button" aria-label="Seguinte">›</button>
       <div class="fh-dots">
-        <button class="on" type="button" aria-label="Slide 1"></button>
-        <button type="button" aria-label="Slide 2"></button>
-        <button type="button" aria-label="Slide 3"></button>
+        <?php foreach ( $banners as $bi => $bn ) : ?>
+        <button<?php echo 0 === $bi ? ' class="on"' : ''; ?> type="button" aria-label="Slide <?php echo (int) $bi + 1; ?>"></button>
+        <?php endforeach; ?>
       </div>
     </section>
   </div>
@@ -473,7 +489,7 @@ class FDTF_Plugin {
   <section class="fh-sec">
     <div class="fh-wrap">
       <div class="fh-gang">
-        <div class="fh-gimg"><span class="fh-gph">CRIE A SUA<br>FOLHA DTF!</span></div>
+        <div class="fh-gimg"><img src="<?php echo esc_url( $img . 'gang.jpg' ); ?>" alt="Crie a sua folha DTF (gang sheet) no editor" loading="lazy"></div>
         <div>
           <h2>Maximize o seu lucro com Gang Sheets personalizadas</h2>
           <p class="fh-glead">Deixe de pagar por design. Coloque os logos, gráficos e etiquetas que quiser numa única folha e pague um preço baixo por metro.</p>
