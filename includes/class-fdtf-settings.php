@@ -149,7 +149,7 @@ class FDTF_Settings {
 					array( 'label' => '300 a 499 metros', 'min' => 300, 'max' => 499, 'price' => 4.35 ),
 					array( 'label' => '500+ metros',      'min' => 500, 'max' => 0,   'price' => 3.65 ),
 				),
-				'features'     => array( 'Aplica em todos os tecidos', 'Cores vibrantes', 'Hot Peel', '100 lavagens garantidas', 'Largura rolo 57cm' ),
+				'features'     => array( 'Aplica em todos os tecidos', 'Cores vibrantes', 'Hot Peel', '50 lavagens garantidas', 'Largura rolo 57cm' ),
 				'guidelines'   => array(
 					array( 'tone' => 'blue', 'html' => 'Para melhores resultados, envie um ficheiro com pelo menos <b>300 DPI</b> e <b>fundo transparente</b>.' ),
 					array( 'tone' => 'red',  'html' => 'O design deve estar limpo e pronto a imprimir. <b>Sem pixéis semi-transparentes</b> nem gradientes de bordas suaves.' ),

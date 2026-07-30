@@ -3,7 +3,7 @@
  * Plugin Name:       Fábrica DTF – Configurador de T-shirts
  * Plugin URI:        https://fabricadtf.pt
  * Description:        Configurador de t-shirts personalizadas (modelo, cor, tamanhos, upload de arte com pré-visualização em tempo real) integrado com o WooCommerce. Adiciona o produto configurado ao carrinho e usa os pagamentos e envios já existentes. Shortcode: [fabricadtf_configurador]
- * Version:           1.9.13
+ * Version:           1.9.14
  * Author:            Anirudha Talmale
  * Text Domain:       fabricadtf-configurador
  * Domain Path:       /languages
@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit; // No direct access.
 }
 
-define( 'FDTF_VERSION', '1.9.13' );
+define( 'FDTF_VERSION', '1.9.14' );
 define( 'FDTF_FILE', __FILE__ );
 define( 'FDTF_DIR', plugin_dir_path( __FILE__ ) );
 define( 'FDTF_URL', plugin_dir_url( __FILE__ ) );
