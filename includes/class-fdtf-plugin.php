@@ -438,7 +438,7 @@ class FDTF_Plugin {
 			array( 'Que tipo de prensa preciso?', 'Uma prensa térmica plana. Aplique a cerca de 150–160 °C, com pressão média, durante 10 a 15 segundos. Também funciona com prensa de boné para superfícies adequadas.' ),
 			array( 'Que tamanhos estão disponíveis?', 'As transferências DTF são vendidas a metro (largura de rolo 57cm), por isso escolhe o comprimento que precisar.' ),
 			array( 'Como resistem à lavagem?', 'Com a aplicação correta, as transferências DTF aguentam mais de 50 lavagens sem estalar nem desbotar. Lave do avesso, a 30 °C, e evite secador.' ),
-			array( 'Com que rapidez recebo a encomenda?', 'Produzimos no próprio dia sempre que possível. O envio para Portugal Continental demora normalmente 1 a 2 dias úteis. Portes grátis em encomendas acima de 150€.' ),
+			array( 'Com que rapidez recebo a encomenda?', 'Produzimos no próprio dia sempre que possível. O envio para Portugal Continental demora normalmente 1 a 2 dias úteis. Portes grátis em encomendas acima de 150€. A Fábrica DTF não se responsabiliza por qualquer atraso na entrega da encomenda pela transportadora.' ),
 			array( 'Que formato de ficheiro devo enviar?', 'De preferência PNG com fundo transparente em alta resolução (300 dpi), ou PDF. Se o ficheiro for grande, pode enviar o link do WeTransfer nas notas da encomenda.' ),
 			array( 'Qual é a política de reembolso?', 'Como cada transferência é personalizada, não aceitamos devoluções por desistência. Se houver algum defeito de impressão da nossa parte, reimprimimos ou reembolsamos sem custos.' ),
 			array( 'É possível cancelar uma encomenda?', 'Sim, desde que a produção ainda não tenha começado. Contacte-nos o quanto antes pelo telefone ou pelo formulário de contacto.' ),
