@@ -18,6 +18,8 @@ class FDTF_Plugin {
 	public $settings;
 	/** @var FDTF_Cart */
 	public $cart;
+	/** @var FDTF_Popup */
+	public $popup;
 
 	public static function instance() {
 		if ( null === self::$instance ) {
@@ -29,6 +31,7 @@ class FDTF_Plugin {
 	private function __construct() {
 		$this->settings = new FDTF_Settings();
 		$this->cart     = new FDTF_Cart();
+		$this->popup    = new FDTF_Popup();
 
 		add_shortcode( 'fabricadtf_configurador', array( $this, 'shortcode' ) );
 		add_shortcode( 'fabricadtf_dtf', array( $this, 'shortcode_dtf' ) );

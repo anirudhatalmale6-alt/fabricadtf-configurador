@@ -1,0 +1,38 @@
+/* Fábrica DTF — pop-up de subscrição com desconto */
+.fdtf-pop{position:fixed;inset:0;z-index:999999;display:none;align-items:center;justify-content:center;padding:18px}
+.fdtf-pop.is-open{display:flex}
+.fdtf-pop-backdrop{position:absolute;inset:0;background:rgba(6,12,40,.72);backdrop-filter:blur(2px)}
+.fdtf-pop-card{position:relative;z-index:1;display:flex;width:100%;max-width:820px;max-height:92vh;overflow:hidden;background:#fff;border-radius:16px;box-shadow:0 24px 70px rgba(0,0,0,.45);animation:fdtfPopIn .28s ease}
+@keyframes fdtfPopIn{from{opacity:0;transform:translateY(14px) scale(.98)}to{opacity:1;transform:none}}
+.fdtf-pop-x{position:absolute;top:8px;right:12px;z-index:3;width:34px;height:34px;border:0;border-radius:50%;background:rgba(255,255,255,.9);color:#0b1a5b;font-size:24px;line-height:1;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.18)}
+.fdtf-pop-x:hover{background:#fff}
+.fdtf-pop-media{flex:0 0 46%;background:#0b1a5b}
+.fdtf-pop-media img{display:block;width:100%;height:100%;object-fit:cover}
+.fdtf-pop-body{flex:1 1 auto;padding:34px 30px;display:flex;flex-direction:column;justify-content:center;text-align:center;overflow-y:auto}
+.fdtf-pop-title{margin:0 0 10px;font-size:26px;line-height:1.15;font-weight:800;color:#0b1a5b}
+.fdtf-pop-sub{margin:0 0 18px;font-size:15px;line-height:1.5;color:#444}
+.fdtf-pop-form{display:flex;flex-direction:column;gap:10px}
+.fdtf-pop-email{width:100%;padding:13px 15px;border:1.5px solid #cfd6e6;border-radius:9px;font-size:15px;color:#111;background:#fff;box-sizing:border-box}
+.fdtf-pop-email:focus{outline:none;border-color:#0b1a5b;box-shadow:0 0 0 3px rgba(11,26,91,.14)}
+.fdtf-pop-email.is-invalid{border-color:#d62828;box-shadow:0 0 0 3px rgba(214,40,40,.14)}
+.fdtf-pop-btn{width:100%;padding:14px 18px;border:0;border-radius:9px;background:#0b1a5b;color:#fff;font-size:16px;font-weight:800;letter-spacing:.4px;cursor:pointer;transition:background .15s,transform .05s}
+.fdtf-pop-btn:hover{background:#122a86}
+.fdtf-pop-btn:active{transform:translateY(1px)}
+.fdtf-pop-btn[disabled]{opacity:.6;cursor:default}
+.fdtf-pop-msg{min-height:0;margin-top:12px;font-size:14px;line-height:1.45}
+.fdtf-pop-msg.is-error{color:#d62828}
+.fdtf-pop-msg.is-ok{color:#1e7d34;font-weight:600}
+.fdtf-pop-code{display:inline-block;margin-top:8px;border:2px dashed #0b1a5b;border-radius:9px;padding:8px 16px;font-size:20px;font-weight:800;letter-spacing:2px;color:#0b1a5b}
+.fdtf-pop-no{margin-top:14px;background:none;border:0;color:#888;font-size:13px;text-decoration:underline;cursor:pointer}
+.fdtf-pop-no:hover{color:#555}
+.fdtf-pop-consent{margin:14px 0 0;font-size:11.5px;line-height:1.4;color:#9aa0aa}
+
+@media(max-width:680px){
+	.fdtf-pop{padding:12px}
+	.fdtf-pop-card{flex-direction:column;max-width:400px;max-height:94vh;overflow-y:auto}
+	.fdtf-pop-media{flex:none;max-height:230px}
+	.fdtf-pop-media img{height:auto;max-height:230px}
+	.fdtf-pop-body{padding:24px 20px}
+	.fdtf-pop-title{font-size:22px}
+	.fdtf-pop-sub{font-size:14px}
+}

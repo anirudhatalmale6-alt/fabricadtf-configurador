@@ -160,6 +160,22 @@ class FDTF_Settings {
 				'requirements_html' => self::default_requirements_html(),
 				'images'       => array( FDTF_URL . 'assets/dtf-images/dtf-roll-1.jpg' ),
 			),
+			'popup'       => array(
+				'enabled'      => false, // false = apenas pré-visualização (?fdtf_popup=1); true = visível para todos.
+				'image'        => FDTF_URL . 'assets/popup/popup.jpg',
+				'discount'     => 10,    // Percentagem de desconto.
+				'title'        => 'Ganhe 10% na sua 1ª encomenda',
+				'subtitle'     => 'Subscreva a nossa newsletter e receba já o seu código de 10% de desconto por email, além de acesso às melhores promoções.',
+				'placeholder'  => 'O seu email',
+				'button'       => 'QUERO O MEU DESCONTO',
+				'dismiss'      => 'Não, obrigado',
+				'success'      => 'Obrigado! Enviámos o seu código de 10% para o seu email. Verifique a caixa de entrada (e a pasta de Spam).',
+				'consent'      => 'Ao subscrever aceita receber emails da Fábrica DTF. Pode cancelar quando quiser.',
+				'delay'        => 6,     // Segundos até aparecer.
+				'cookie_days'  => 30,    // Não voltar a mostrar durante X dias.
+				'coupon_prefix'=> 'BEMVINDO10',
+				'coupon_days'  => 30,    // Validade do cupão em dias.
+			),
 		);
 	}
 
