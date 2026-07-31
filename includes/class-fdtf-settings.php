@@ -161,7 +161,7 @@ class FDTF_Settings {
 				'images'       => array( FDTF_URL . 'assets/dtf-images/dtf-roll-1.jpg' ),
 			),
 			'popup'       => array(
-				'enabled'      => false, // false = apenas pré-visualização (?fdtf_popup=1); true = visível para todos.
+				'enabled'      => true, // false = apenas pré-visualização (?fdtf_popup=1); true = visível para todos.
 				'image'        => FDTF_URL . 'assets/popup/popup.jpg',
 				'discount'     => 10,    // Percentagem de desconto.
 				'title'        => 'Ganhe 10% na sua 1ª encomenda',
