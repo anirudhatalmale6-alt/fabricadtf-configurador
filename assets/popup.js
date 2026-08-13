@@ -64,9 +64,11 @@
 	var btn = pop.querySelector('.fdtf-pop-btn');
 	var msg = pop.querySelector('.fdtf-pop-msg');
 
-	function showMsg(text, kind, codeHtml) {
+	function showMsg(text, kind, codeHtml, hint) {
 		msg.className = 'fdtf-pop-msg ' + (kind === 'ok' ? 'is-ok' : 'is-error');
-		msg.innerHTML = text + (codeHtml ? '<br><span class="fdtf-pop-code">' + codeHtml + '</span>' : '');
+		msg.innerHTML = text
+			+ (codeHtml ? '<br><span class="fdtf-pop-code">' + codeHtml + '</span>' : '')
+			+ (hint ? '<span class="fdtf-pop-hint">' + hint + '</span>' : '');
 	}
 
 	function refreshNonce() {
@@ -98,7 +100,10 @@
 					if (j.data && j.data.cookie && j.data.code) {
 						setCookie(j.data.cookie, j.data.code, CFG.cookieDays || 30);
 					}
-					showMsg(CFG.success || (j.data && j.data.message) || 'Obrigado!', 'ok', j.data && j.data.code);
+					var hint = (j.data && j.data.sent === false)
+						? 'Guarde este código — não conseguimos enviar o email neste momento. O código já está guardado e será aplicado no checkout.'
+						: 'Guarde este código. Enviámos também por email — se não o encontrar, veja a pasta de <b>Spam</b> ou <b>Promoções</b>.';
+					showMsg(CFG.success || (j.data && j.data.message) || 'Obrigado!', 'ok', j.data && j.data.code, hint);
 					form.style.display = 'none';
 					if (!preview) { setCookie(DONE_COOKIE, '1', CFG.cookieDays || 30); }
 					btn.disabled = false;

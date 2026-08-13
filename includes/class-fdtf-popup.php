@@ -7,6 +7,9 @@
  * gerado um cupão WooCommerce único de 10% (uso único), o código é enviado por
  * email (via o SMTP configurado) e é aplicado automaticamente no checkout.
  *
+ * O envio é registado (data, código, sucesso/erro) para que a loja possa ver no
+ * painel quem recebeu e reenviar o código quando necessário.
+ *
  * @package FabricaDTF_Configurador
  */
 
@@ -18,6 +21,9 @@ class FDTF_Popup {
 
 	const COOKIE_COUPON = 'fdtf_welcome_coupon';
 	const LEADS_OPTION  = 'fdtf_popup_leads';
+	const LOG_OPTION    = 'fdtf_popup_log';
+	const UNSUB_OPTION  = 'fdtf_popup_unsub';
+	const LOG_MAX       = 500;
 
 	public function __construct() {
 		// Enqueue assets early (wp_footer is too late for enqueuing), render markup in the footer.
@@ -30,8 +36,14 @@ class FDTF_Popup {
 		add_action( 'wp_ajax_fdtf_popup_nonce', array( $this, 'ajax_nonce' ) );
 		add_action( 'wp_ajax_nopriv_fdtf_popup_nonce', array( $this, 'ajax_nonce' ) );
 
-		// Auto-apply the welcome coupon on cart / checkout.
+		// Auto-apply the welcome coupon on cart / checkout, and handle unsubscribes.
 		add_action( 'template_redirect', array( $this, 'auto_apply_coupon' ) );
+		add_action( 'template_redirect', array( $this, 'maybe_unsubscribe' ), 1 );
+
+		// Admin: subscribers screen + actions.
+		add_action( 'admin_menu', array( $this, 'admin_menu' ) );
+		add_action( 'admin_post_fdtf_popup_resend', array( $this, 'admin_resend' ) );
+		add_action( 'admin_post_fdtf_popup_export', array( $this, 'admin_export' ) );
 	}
 
 	/**
@@ -154,11 +166,8 @@ class FDTF_Popup {
 		$cfg      = $this->config();
 		$discount = (int) ( $cfg['discount'] ?? 10 );
 		$days     = max( 1, (int) ( $cfg['coupon_days'] ?? 30 ) );
-		$prefix   = preg_replace( '/[^A-Z0-9]/', '', strtoupper( (string) ( $cfg['coupon_prefix'] ?? 'BEMVINDO' ) ) );
 
-		// Deterministic, unique-per-email code so re-subscribing resends the same one.
-		$code = $prefix . '-' . strtoupper( substr( hash_hmac( 'sha1', strtolower( $email ), wp_salt() ), 0, 6 ) );
-
+		$code      = $this->code_for( $email );
 		$coupon_id = $this->ensure_coupon( $code, $discount, $days );
 		if ( ! $coupon_id ) {
 			wp_send_json_error( array( 'code' => 'coupon_fail', 'message' => 'Não foi possível gerar o código. Tente novamente mais tarde.' ) );
@@ -166,13 +175,22 @@ class FDTF_Popup {
 
 		$this->record_lead( $email );
 		$this->subscribe_mailchimp( $email );
-		$this->send_coupon_email( $email, $code, $discount, $days );
+		$result = $this->send_coupon_email( $email, $code, $discount, $days );
+		$this->log_send( $email, $code, $result['sent'], $result['error'] );
 
 		wp_send_json_success( array(
 			'code'    => $code,
+			'sent'    => (bool) $result['sent'],
 			'message' => (string) ( $cfg['success'] ?? 'Obrigado!' ),
 			'cookie'  => self::COOKIE_COUPON,
 		) );
+	}
+
+	/** Deterministic, unique-per-email coupon code (re-subscribing returns the same one). */
+	private function code_for( $email ) {
+		$cfg    = $this->config();
+		$prefix = preg_replace( '/[^A-Z0-9]/', '', strtoupper( (string) ( $cfg['coupon_prefix'] ?? 'BEMVINDO' ) ) );
+		return $prefix . '-' . strtoupper( substr( hash_hmac( 'sha1', strtolower( $email ), wp_salt() ), 0, 6 ) );
 	}
 
 	/**
@@ -220,6 +238,40 @@ class FDTF_Popup {
 		}
 	}
 
+	/** Record the outcome of an attempted coupon email, newest first. */
+	private function log_send( $email, $code, $sent, $error ) {
+		$log = get_option( self::LOG_OPTION, array() );
+		if ( ! is_array( $log ) ) {
+			$log = array();
+		}
+		array_unshift( $log, array(
+			't'     => current_time( 'mysql' ),
+			'email' => strtolower( $email ),
+			'code'  => $code,
+			'sent'  => $sent ? 1 : 0,
+			'err'   => $error ? substr( (string) $error, 0, 300 ) : '',
+		) );
+		if ( count( $log ) > self::LOG_MAX ) {
+			$log = array_slice( $log, 0, self::LOG_MAX );
+		}
+		update_option( self::LOG_OPTION, $log, false );
+	}
+
+	/** Latest log entry per email address. */
+	private function log_by_email() {
+		$log = get_option( self::LOG_OPTION, array() );
+		$out = array();
+		if ( is_array( $log ) ) {
+			foreach ( $log as $row ) {
+				$key = isset( $row['email'] ) ? strtolower( $row['email'] ) : '';
+				if ( $key && ! isset( $out[ $key ] ) ) {
+					$out[ $key ] = $row;
+				}
+			}
+		}
+		return $out;
+	}
+
 	/** Best-effort subscribe to Mailchimp via the MC4WP plugin, if configured. */
 	private function subscribe_mailchimp( $email ) {
 		try {
@@ -249,11 +301,31 @@ class FDTF_Popup {
 		}
 	}
 
-	/** Email the coupon code to the subscriber (uses the site's mailer / SMTP). */
+	/** One-click unsubscribe link for a given address. */
+	private function unsub_url( $email ) {
+		return add_query_arg( array(
+			'fdtf_unsub' => rawurlencode( strtolower( $email ) ),
+			'k'          => substr( hash_hmac( 'sha1', 'unsub|' . strtolower( $email ), wp_salt() ), 0, 16 ),
+		), home_url( '/' ) );
+	}
+
+	/**
+	 * Email the coupon code to the subscriber.
+	 *
+	 * Deliverability matters here: a large share of subscribers are on Gmail /
+	 * Outlook, which are strict with promotional mail. So we send a real
+	 * multipart message (HTML + plain text), a recognisable sender name, a
+	 * Reply-To that a human reads, and List-Unsubscribe headers.
+	 *
+	 * @return array{sent:bool,error:string}
+	 */
 	private function send_coupon_email( $email, $code, $percent, $days ) {
 		$shop  = function_exists( 'wc_get_page_permalink' ) ? wc_get_page_permalink( 'shop' ) : home_url( '/' );
 		$brand = get_bloginfo( 'name' );
 		$valid = date_i18n( 'd/m/Y', time() + $days * DAY_IN_SECONDS );
+		$reply = $this->reply_to_address();
+		$unsub = $this->unsub_url( $email );
+
 		$subject = sprintf( 'O seu código de %d%% de desconto — %s', $percent, $brand );
 
 		$msg  = '<div style="font-family:Arial,Helvetica,sans-serif;max-width:520px;margin:0 auto;color:#1a1a1a">';
@@ -264,11 +336,74 @@ class FDTF_Popup {
 		$msg .= '<p>Use o código no checkout — ou ele será aplicado automaticamente quando voltar à loja neste dispositivo.</p>';
 		$msg .= '<p style="color:#555;font-size:14px">Válido até <b>' . esc_html( $valid ) . '</b> · uso único.</p>';
 		$msg .= '<p style="margin-top:22px"><a href="' . esc_url( $shop ) . '" style="background:#0b1a5b;color:#fff;text-decoration:none;padding:12px 24px;border-radius:8px;font-weight:700;display:inline-block">Ir para a loja</a></p>';
-		$msg .= '<p style="color:#888;font-size:12px;margin-top:26px">' . esc_html( $brand ) . ' · A tua imaginação, a nossa impressão.</p>';
+		$msg .= '<p style="color:#888;font-size:12px;margin-top:26px">' . esc_html( $brand ) . ' · A tua imaginação, a nossa impressão.<br>';
+		$msg .= 'Recebeu este email porque subscreveu em <a href="' . esc_url( home_url( '/' ) ) . '" style="color:#888">fabricadtf.pt</a>. ';
+		$msg .= '<a href="' . esc_url( $unsub ) . '" style="color:#888">Cancelar subscrição</a>.</p>';
 		$msg .= '</div>';
 
-		$headers = array( 'Content-Type: text/html; charset=UTF-8' );
-		wp_mail( $email, $subject, $msg, $headers );
+		$plain  = "Bem-vindo a Fabrica DTF!\n\n";
+		$plain .= "Obrigado por subscrever. O seu codigo de {$percent}% de desconto na primeira encomenda:\n\n";
+		$plain .= "    {$code}\n\n";
+		$plain .= "Use o codigo no checkout. Valido ate {$valid}, uso unico.\n\n";
+		$plain .= "Loja: {$shop}\n\n";
+		$plain .= "Recebeu este email porque subscreveu em fabricadtf.pt.\n";
+		$plain .= "Cancelar subscricao: {$unsub}\n";
+
+		$headers = array(
+			'Content-Type: text/html; charset=UTF-8',
+			'Reply-To: ' . $reply,
+			'List-Unsubscribe: <' . $unsub . '>, <mailto:' . $reply . '?subject=Unsubscribe>',
+			'List-Unsubscribe-Post: List-Unsubscribe=One-Click',
+		);
+
+		return $this->mail( $email, $subject, $msg, $plain, $headers );
+	}
+
+	/** Address a human actually reads (shop admin email by default). */
+	private function reply_to_address() {
+		$addr = get_option( 'woocommerce_email_from_address' );
+		if ( ! $addr || ! is_email( $addr ) || 0 === stripos( $addr, 'no-reply' ) ) {
+			$addr = get_option( 'admin_email' );
+		}
+		return $addr;
+	}
+
+	/**
+	 * wp_mail wrapper: forces a recognisable From name, attaches the plain-text
+	 * alternative, and captures any failure so it can be logged and shown.
+	 *
+	 * @return array{sent:bool,error:string}
+	 */
+	private function mail( $to, $subject, $html, $plain, $headers ) {
+		$error = '';
+
+		$capture = function ( $wp_error ) use ( &$error ) {
+			if ( is_wp_error( $wp_error ) ) {
+				$error = $wp_error->get_error_message();
+			}
+		};
+		$from_name = function () {
+			$name = get_bloginfo( 'name' );
+			return $name ? $name : 'Fábrica DTF';
+		};
+		$alt_body = function ( $phpmailer ) use ( $plain ) {
+			$phpmailer->AltBody = $plain;
+		};
+
+		add_action( 'wp_mail_failed', $capture );
+		add_filter( 'wp_mail_from_name', $from_name, 99 );
+		add_action( 'phpmailer_init', $alt_body, 999 );
+
+		$sent = wp_mail( $to, $subject, $html, $headers );
+
+		remove_action( 'phpmailer_init', $alt_body, 999 );
+		remove_filter( 'wp_mail_from_name', $from_name, 99 );
+		remove_action( 'wp_mail_failed', $capture );
+
+		if ( ! $sent && ! $error ) {
+			$error = 'wp_mail devolveu false (sem detalhe).';
+		}
+		return array( 'sent' => (bool) $sent, 'error' => $error );
 	}
 
 	/**
@@ -297,5 +432,194 @@ class FDTF_Popup {
 			return;
 		}
 		WC()->cart->apply_coupon( $code );
+	}
+
+	/** Handle the List-Unsubscribe / footer unsubscribe link. */
+	public function maybe_unsubscribe() {
+		if ( empty( $_GET['fdtf_unsub'] ) || empty( $_GET['k'] ) ) {
+			return;
+		}
+		$email = sanitize_email( wp_unslash( $_GET['fdtf_unsub'] ) );
+		$key   = sanitize_text_field( wp_unslash( $_GET['k'] ) );
+		$want  = substr( hash_hmac( 'sha1', 'unsub|' . strtolower( $email ), wp_salt() ), 0, 16 );
+		if ( ! $email || ! hash_equals( $want, $key ) ) {
+			return;
+		}
+
+		$unsub = get_option( self::UNSUB_OPTION, array() );
+		if ( ! is_array( $unsub ) ) {
+			$unsub = array();
+		}
+		$unsub[ strtolower( $email ) ] = current_time( 'mysql' );
+		update_option( self::UNSUB_OPTION, $unsub, false );
+
+		$leads = get_option( self::LEADS_OPTION, array() );
+		if ( is_array( $leads ) && isset( $leads[ strtolower( $email ) ] ) ) {
+			unset( $leads[ strtolower( $email ) ] );
+			update_option( self::LEADS_OPTION, $leads, false );
+		}
+
+		wp_die(
+			'<h2>Subscrição cancelada</h2><p>O endereço <b>' . esc_html( $email ) . '</b> deixou de receber emails da Fábrica DTF.</p>'
+			. '<p><a href="' . esc_url( home_url( '/' ) ) . '">Voltar à loja</a></p>',
+			'Subscrição cancelada',
+			array( 'response' => 200 )
+		);
+	}
+
+	/* ---------------------------------------------------------------------
+	 * Admin: subscribers screen
+	 * ------------------------------------------------------------------ */
+
+	public function admin_menu() {
+		add_submenu_page(
+			'woocommerce',
+			'Subscritores do pop-up',
+			'Subscritores pop-up',
+			'manage_woocommerce',
+			'fdtf-subscritores',
+			array( $this, 'admin_page' )
+		);
+	}
+
+	public function admin_page() {
+		if ( ! current_user_can( 'manage_woocommerce' ) ) {
+			wp_die( 'Sem permissões.' );
+		}
+		$leads = get_option( self::LEADS_OPTION, array() );
+		if ( ! is_array( $leads ) ) {
+			$leads = array();
+		}
+		$leads = array_reverse( $leads, true );
+		$log   = $this->log_by_email();
+		$notice = isset( $_GET['fdtf_msg'] ) ? sanitize_text_field( wp_unslash( $_GET['fdtf_msg'] ) ) : '';
+		?>
+		<div class="wrap">
+			<h1>Subscritores do pop-up</h1>
+			<?php if ( $notice ) : ?>
+				<div class="notice notice-info is-dismissible"><p><?php echo esc_html( $notice ); ?></p></div>
+			<?php endif; ?>
+			<p>
+				Total de subscritores: <strong><?php echo count( $leads ); ?></strong>.
+				A coluna “Email” mostra se o envio do código foi aceite pelo servidor de correio.
+				Se um cliente disser que não recebeu, use <em>Reenviar</em> e peça-lhe para verificar também a pasta de Spam/Publicidade.
+			</p>
+			<p>
+				<a class="button" href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=fdtf_popup_export' ), 'fdtf_popup_export' ) ); ?>">Exportar CSV</a>
+			</p>
+			<table class="widefat striped">
+				<thead>
+					<tr>
+						<th>Data</th>
+						<th>Email</th>
+						<th>Código</th>
+						<th>Usado</th>
+						<th>Envio</th>
+						<th>Ação</th>
+					</tr>
+				</thead>
+				<tbody>
+				<?php if ( ! $leads ) : ?>
+					<tr><td colspan="6">Ainda não há subscritores.</td></tr>
+				<?php endif; ?>
+				<?php foreach ( $leads as $email => $when ) :
+					$code = $this->code_for( $email );
+					$cid  = function_exists( 'wc_get_coupon_id_by_code' ) ? wc_get_coupon_id_by_code( $code ) : 0;
+					$used = 0;
+					if ( $cid ) {
+						$c    = new WC_Coupon( $cid );
+						$used = (int) $c->get_usage_count();
+					}
+					$row = isset( $log[ strtolower( $email ) ] ) ? $log[ strtolower( $email ) ] : null;
+					?>
+					<tr>
+						<td><?php echo esc_html( is_string( $when ) ? $when : '' ); ?></td>
+						<td><?php echo esc_html( $email ); ?></td>
+						<td><code><?php echo esc_html( $code ); ?></code></td>
+						<td><?php echo $used ? '<span style="color:#046b1f">sim</span>' : '—'; ?></td>
+						<td>
+							<?php
+							if ( ! $row ) {
+								echo '<span style="color:#777">sem registo</span>';
+							} elseif ( ! empty( $row['sent'] ) ) {
+								echo '<span style="color:#046b1f">enviado</span> <small>' . esc_html( $row['t'] ) . '</small>';
+							} else {
+								echo '<span style="color:#b32d2e">falhou</span> <small>' . esc_html( $row['err'] ) . '</small>';
+							}
+							?>
+						</td>
+						<td>
+							<a class="button button-small" href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=fdtf_popup_resend&email=' . rawurlencode( $email ) ), 'fdtf_popup_resend' ) ); ?>">Reenviar</a>
+						</td>
+					</tr>
+				<?php endforeach; ?>
+				</tbody>
+			</table>
+		</div>
+		<?php
+	}
+
+	public function admin_resend() {
+		if ( ! current_user_can( 'manage_woocommerce' ) ) {
+			wp_die( 'Sem permissões.' );
+		}
+		check_admin_referer( 'fdtf_popup_resend' );
+		$email = isset( $_GET['email'] ) ? sanitize_email( wp_unslash( $_GET['email'] ) ) : '';
+		if ( ! $email || ! is_email( $email ) ) {
+			wp_safe_redirect( admin_url( 'admin.php?page=fdtf-subscritores&fdtf_msg=' . rawurlencode( 'Email inválido.' ) ) );
+			exit;
+		}
+		$cfg      = $this->config();
+		$discount = (int) ( $cfg['discount'] ?? 10 );
+		$days     = max( 1, (int) ( $cfg['coupon_days'] ?? 30 ) );
+		$code     = $this->code_for( $email );
+		$this->ensure_coupon( $code, $discount, $days );
+		$result = $this->send_coupon_email( $email, $code, $discount, $days );
+		$this->log_send( $email, $code, $result['sent'], $result['error'] );
+
+		$msg = $result['sent']
+			? sprintf( 'Código %s reenviado para %s.', $code, $email )
+			: sprintf( 'Falha ao reenviar para %s: %s', $email, $result['error'] );
+		wp_safe_redirect( admin_url( 'admin.php?page=fdtf-subscritores&fdtf_msg=' . rawurlencode( $msg ) ) );
+		exit;
+	}
+
+	public function admin_export() {
+		if ( ! current_user_can( 'manage_woocommerce' ) ) {
+			wp_die( 'Sem permissões.' );
+		}
+		check_admin_referer( 'fdtf_popup_export' );
+		$leads = get_option( self::LEADS_OPTION, array() );
+		if ( ! is_array( $leads ) ) {
+			$leads = array();
+		}
+		$log = $this->log_by_email();
+
+		nocache_headers();
+		header( 'Content-Type: text/csv; charset=UTF-8' );
+		header( 'Content-Disposition: attachment; filename=subscritores-fabricadtf.csv' );
+		$out = fopen( 'php://output', 'w' );
+		fwrite( $out, "\xEF\xBB\xBF" ); // BOM so Excel reads the accents.
+		fputcsv( $out, array( 'Data', 'Email', 'Codigo', 'Usado', 'Envio', 'Erro' ) );
+		foreach ( array_reverse( $leads, true ) as $email => $when ) {
+			$code = $this->code_for( $email );
+			$cid  = function_exists( 'wc_get_coupon_id_by_code' ) ? wc_get_coupon_id_by_code( $code ) : 0;
+			$used = 0;
+			if ( $cid ) {
+				$c    = new WC_Coupon( $cid );
+				$used = (int) $c->get_usage_count();
+			}
+			$row = isset( $log[ strtolower( $email ) ] ) ? $log[ strtolower( $email ) ] : null;
+			fputcsv( $out, array(
+				is_string( $when ) ? $when : '',
+				$email,
+				$code,
+				$used ? 'sim' : 'nao',
+				$row ? ( ! empty( $row['sent'] ) ? 'enviado' : 'falhou' ) : 'sem registo',
+				$row && ! empty( $row['err'] ) ? $row['err'] : '',
+			) );
+		}
+		fclose( $out );
+		exit;
 	}
 }

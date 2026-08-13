@@ -23,6 +23,7 @@
 .fdtf-pop-msg.is-error{color:#d62828}
 .fdtf-pop-msg.is-ok{color:#1e7d34;font-weight:600}
 .fdtf-pop-code{display:inline-block;margin-top:8px;border:2px dashed #0b1a5b;border-radius:9px;padding:8px 16px;font-size:20px;font-weight:800;letter-spacing:2px;color:#0b1a5b}
+.fdtf-pop-hint{display:block;margin-top:10px;font-size:12.5px;line-height:1.45;color:#5a6272;font-weight:400}
 .fdtf-pop-no{margin-top:14px;background:none;border:0;color:#888;font-size:13px;text-decoration:underline;cursor:pointer}
 .fdtf-pop-no:hover{color:#555}
 .fdtf-pop-consent{margin:14px 0 0;font-size:11.5px;line-height:1.4;color:#9aa0aa}
