@@ -47,10 +47,74 @@ class FDTF_Plugin {
 		add_action( 'template_redirect', array( $this, 'maybe_redirect_old_dtf' ) );
 		// The shop archive renders no page heading at all — give it its own H1.
 		add_action( 'woocommerce_archive_description', array( $this, 'shop_heading' ), 5 );
+		// Tell Google when the visitor accepts cookies. Priority 999 so this runs
+		// AFTER the Site Kit tag has pushed its "denied" defaults — an update
+		// pushed before the default would simply be overwritten by it.
+		add_action( 'wp_head', array( $this, 'print_consent_mode' ), 999 );
 		// Load a translations file if present.
 		add_action( 'init', function () {
 			load_plugin_textdomain( 'fabricadtf-configurador', false, dirname( plugin_basename( FDTF_FILE ) ) . '/languages' );
 		} );
+	}
+
+	/**
+	 * Google Consent Mode bridge.
+	 *
+	 * The cookie banner (Cookie Notice, free version) sets its own cookie when the
+	 * visitor accepts, but never tells Google about it — so every hit, including
+	 * consented ones, was sent with consent denied (gcs=G100). Google Ads could
+	 * not attribute conversions and remarketing lists never built.
+	 *
+	 * This bridges the two: it grants consent when the visitor has already
+	 * accepted, and updates live when they click accept or refuse.
+	 */
+	public function print_consent_mode() {
+		if ( is_admin() ) {
+			return;
+		}
+		// The consent state is read in JavaScript, never baked into the HTML:
+		// this page is served from the LiteSpeed cache, so a server-side check
+		// would freeze one visitor's answer and hand it to everybody else.
+		?>
+<script id="fdtf-consent-mode">
+(function(){
+	window.dataLayer = window.dataLayer || [];
+	function g(){ window.dataLayer.push(arguments); }
+	var GRANTED = { ad_storage:'granted', ad_user_data:'granted', ad_personalization:'granted', analytics_storage:'granted', functionality_storage:'granted', security_storage:'granted', personalization_storage:'granted' };
+	var DENIED  = { ad_storage:'denied',  ad_user_data:'denied',  ad_personalization:'denied',  analytics_storage:'denied' };
+
+	function accepted(){
+		return document.cookie.split('; ').some(function(c){ return c.indexOf('cookie_notice_accepted=true') === 0; });
+	}
+
+	// Already accepted on a previous visit — grant before the first hit is sent.
+	if (accepted()) { g('consent','update',GRANTED); }
+
+	function grant(){ g('consent','update',GRANTED); }
+	function deny(){ g('consent','update',DENIED); }
+
+	function bind(){
+		var ok = document.getElementById('cn-accept-cookie');
+		var no = document.getElementById('cn-refuse-cookie');
+		if (ok) { ok.addEventListener('click', grant); }
+		if (no) { no.addEventListener('click', deny); }
+	}
+	if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', bind); } else { bind(); }
+
+	// The banner is rendered by a script, so the buttons may appear after
+	// DOMContentLoaded. Watch for them briefly instead of assuming they exist.
+	var tries = 0;
+	var t = setInterval(function(){
+		tries++;
+		var ok = document.getElementById('cn-accept-cookie');
+		if (ok && !ok.dataset.fdtfBound) { ok.dataset.fdtfBound = '1'; ok.addEventListener('click', grant); }
+		var no = document.getElementById('cn-refuse-cookie');
+		if (no && !no.dataset.fdtfBound) { no.dataset.fdtfBound = '1'; no.addEventListener('click', deny); }
+		if (tries > 40 || (ok && no)) { clearInterval(t); }
+	}, 250);
+})();
+</script>
+		<?php
 	}
 
 	/**
