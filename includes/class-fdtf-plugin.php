@@ -20,6 +20,7 @@ class FDTF_Plugin {
 	public $cart;
 	/** @var FDTF_Popup */
 	public $popup;
+	public $notice;
 
 	public static function instance() {
 		if ( null === self::$instance ) {
@@ -32,6 +33,7 @@ class FDTF_Plugin {
 		$this->settings = new FDTF_Settings();
 		$this->cart     = new FDTF_Cart();
 		$this->popup    = new FDTF_Popup();
+		$this->notice   = new FDTF_Notice();
 
 		add_shortcode( 'fabricadtf_configurador', array( $this, 'shortcode' ) );
 		add_shortcode( 'fabricadtf_dtf', array( $this, 'shortcode_dtf' ) );
@@ -80,6 +82,9 @@ class FDTF_Plugin {
 		if ( ! $post || ! has_shortcode( $post->post_content, 'fabricadtf_home' ) ) {
 			return;
 		}
+		// While a closure notice is showing, the "dispatched tomorrow" countdown
+		// contradicts it — drop the countdown line but keep the free-shipping one.
+		$closed = $this->notice && '' !== $this->notice->current_message();
 		?>
 <style id="fh-topbar-css">
 .elementor-element-75e2ade{display:none !important}
@@ -91,7 +96,9 @@ class FDTF_Plugin {
 </style>
 <div id="fhTopbar" role="complementary" aria-label="Aviso de envio">
   <div class="fh-tb-in">
+<?php if ( ! $closed ) : ?>
     <div>Será enviado amanhã se o pedido for feito em: <span class="fh-cd" id="fhCdTop" aria-hidden="true"><b>00</b>:<b>00</b>:<b>00</b></span></div>
+<?php endif; ?>
     <div>Envio grátis em encomendas acima de 150€</div>
   </div>
 </div>
