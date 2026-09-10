@@ -653,6 +653,15 @@ class FDTF_Cart {
 		}
 		$f = $values['fdtf'];
 
+		// Every configured line is added through the same hidden container product,
+		// so without this the order, the emails and the invoice would all show that
+		// container's name ("T-shirt Personalizada") instead of what was ordered.
+		// Mirrors the cart line name from cart_item_name().
+		if ( ! empty( $f['product_name'] ) ) {
+			$tag = ( isset( $f['type'] ) && 'dtf' === $f['type'] ) ? 'por metro' : 'personalizada';
+			$item->set_name( $f['product_name'] . ' (' . $tag . ')' );
+		}
+
 		// DTF a Metro order line.
 		if ( isset( $f['type'] ) && 'dtf' === $f['type'] ) {
 			$item->add_meta_data( 'Produto', $f['product_name'], true );

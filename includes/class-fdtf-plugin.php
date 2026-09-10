@@ -45,10 +45,36 @@ class FDTF_Plugin {
 		add_action( 'wp_head', array( $this, 'print_header_css' ), 99 );
 		// Send the old "DTF a Metro" product page to the new redesigned page.
 		add_action( 'template_redirect', array( $this, 'maybe_redirect_old_dtf' ) );
+		// The shop archive renders no page heading at all — give it its own H1.
+		add_action( 'woocommerce_archive_description', array( $this, 'shop_heading' ), 5 );
 		// Load a translations file if present.
 		add_action( 'init', function () {
 			load_plugin_textdomain( 'fabricadtf-configurador', false, dirname( plugin_basename( FDTF_FILE ) ) . '/languages' );
 		} );
+	}
+
+	/**
+	 * The theme prints no title on the shop archive, so the page had no H1 and
+	 * fell back to the site-wide meta description — which made it look like a
+	 * near-duplicate of the homepage. Give it a heading and a line of its own.
+	 */
+	public function shop_heading() {
+		if ( ! function_exists( 'is_shop' ) || ! is_shop() || is_search() ) {
+			return;
+		}
+		if ( function_exists( 'is_paged' ) && is_paged() ) {
+			return; // Only the first page carries the H1.
+		}
+		echo '<div class="fdtf-shop-head">'
+			. '<h1>Loja Fábrica DTF</h1>'
+			. '<p>Transferências DTF ao metro, gang sheets e t-shirts personalizadas, produzidas em Portugal com envio rápido.</p>'
+			. '</div>';
+		echo '<style id="fdtf-shop-head-css">'
+			. '.fdtf-shop-head{margin:0 0 26px}'
+			. '.fdtf-shop-head h1{font-size:30px;line-height:1.2;margin:0 0 8px;color:#0b1a5b}'
+			. '.fdtf-shop-head p{margin:0;color:#5a6272;font-size:15px;line-height:1.5;max-width:720px}'
+			. '@media(max-width:640px){.fdtf-shop-head h1{font-size:23px}.fdtf-shop-head p{font-size:13.5px}}'
+			. '</style>';
 	}
 
 	/**
@@ -61,6 +87,15 @@ class FDTF_Plugin {
 		if ( is_admin() ) {
 			return;
 		}
+		// Five theme-demo image files were never uploaded (the server answers with
+		// an HTML page instead of an image). Three are zero-height decorations, but
+		// the testimonial avatars rendered as broken-image icons. Hide them until
+		// real photos are supplied.
+		echo '<style id="fdtf-missing-img-css">'
+			. 'img[src*="h2_avatar-1"],img[src*="h2_avatar-2"],'
+			. 'img[src*="h2_img-1."],img[src*="h2_img-3."],img[src*="h2_img-11."]{display:none !important}'
+			. '</style>';
+
 		echo '<style id="fh-nav-css">'
 			. '.elementor-element-2572e95{background-color:#0b1a5b !important}'
 			. '.elementor-element-2572e95 .menu-item>a,.elementor-element-2572e95 .elementor-item{color:#fff !important}'

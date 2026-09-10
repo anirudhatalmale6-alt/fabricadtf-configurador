@@ -211,7 +211,7 @@
       c.innerHTML =
         '<div class="tick">✓</div>' +
         (prod.badge ? '<span class="fdtf-badge ' + (prod.badgeHot ? "hot" : "") + '">' + esc(prod.badge) + '</span>' : '') +
-        '<div class="thumb">' + (thumbSrc ? '<img class="fdtf-tee-img" src="' + thumbSrc + '" alt="">' : teeSVG(state.color ? state.color.hex : "#ffffff")) + '</div>' +
+        '<div class="thumb">' + (thumbSrc ? '<img class="fdtf-tee-img" src="' + thumbSrc + '" alt="Pré-visualização da t-shirt personalizada">' : teeSVG(state.color ? state.color.hex : "#ffffff")) + '</div>' +
         '<h3>' + esc(prod.name) + '</h3>' +
         (prod.desc ? '<p class="fdtf-desc">' + esc(prod.desc) + '</p>' : '') +
         feats +
@@ -302,7 +302,7 @@
     var stage = el('<div class="fdtf-stage"><span class="fdtf-view-tag">' + label + '</span></div>');
     var img = colorImg(view);
     var mock = el('<div class="fdtf-mock"></div>');
-    if (img) { mock.appendChild(el('<img class="fdtf-tee-img" src="' + img + '" alt="">')); }
+    if (img) { mock.appendChild(el('<img class="fdtf-tee-img" src="' + img + '" alt="Pré-visualização da t-shirt personalizada">')); }
     else { mock.innerHTML = teeSVG(state.color ? state.color.hex : "#ffffff", view === "back"); }
     var zones = zoneSetFor(state.product) || ZONES;
     POSITIONS.forEach(function (p) {
@@ -636,7 +636,7 @@
     var pr = pricing();
     summaryHost.innerHTML = "";
     summaryHost.appendChild(el('<h3>' + t("budget", "Resumo do orçamento") + '</h3>'));
-    summaryHost.appendChild(el('<div class="fdtf-sum-prod"><div class="mini">' + (colorImg('front') ? '<img class="fdtf-tee-img" src="' + colorImg('front') + '" alt="">' : teeSVG(state.color ? state.color.hex : "#ffffff")) + '</div>' +
+    summaryHost.appendChild(el('<div class="fdtf-sum-prod"><div class="mini">' + (colorImg('front') ? '<img class="fdtf-tee-img" src="' + colorImg('front') + '" alt="Pré-visualização da t-shirt personalizada">' : teeSVG(state.color ? state.color.hex : "#ffffff")) + '</div>' +
       '<div><div class="nm">' + esc(state.product ? state.product.name : "—") + '</div>' +
       '<div class="meta">' + esc(state.color ? state.color.name : "") + (pr.q ? " · " + pr.q + " un." : "") + '</div></div></div>'));
     var _unitLbl = t("unit", "Pre\u00e7o unit\u00e1rio") + (pr.tier ? ' <small>(' + esc(tierRange(pr.tier)) + ')</small>' : '');
